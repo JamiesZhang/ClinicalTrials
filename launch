@@ -1,0 +1,8 @@
+#/usr/bin/env bash
+
+curDirPath=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+
+# change path of python virtual env
+activatePath=${curDirPath}"/clinicalenv/bin/activate"
+source ${activatePath}
+
