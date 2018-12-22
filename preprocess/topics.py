@@ -4,7 +4,7 @@ import xml.dom.minidom
 import json
 import os
 
-curDir = os.path.dirname(__file__)
+curDir = os.path.dirname(os.path.abspath(__file__))
 dataDir = os.path.join(os.path.dirname(curDir), "data")
 
 __rawTopicsFile = "topics2017.xml"
