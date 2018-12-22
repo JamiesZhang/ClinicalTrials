@@ -7,8 +7,8 @@ import os
 curDir = os.path.dirname(__file__)
 dataDir = os.path.join(os.path.dirname(curDir), "data")
 
-rawTopicsFile = "topics2017.xml"
-extenedTopicsFile = "extendedTopics.xml"
+__rawTopicsFile = "topics2017.xml"
+__extenedTopicsFile = "extendedTopics.xml"
 
 sep = ','
 
@@ -78,7 +78,7 @@ class Topic(object):
         return jsonStr
 
 # Load topics2017.xml by default including 30 Topic instances
-def loadTopics(loadFile=rawTopicsFile):
+def loadTopics(loadFile=__rawTopicsFile):
     # Read topics.xml
     loadPath = os.path.join(dataDir, loadFile)
     DOMTree = xml.dom.minidom.parse(loadPath)
@@ -100,13 +100,17 @@ def loadTopics(loadFile=rawTopicsFile):
     return topics
 
 def loadRawTopics():
-    return loadTopics(rawTopicsFile)
+    return loadTopics(__rawTopicsFile)
 
 def loadExtendedTopics():
-    return loadTopics(extenedTopicsFile)
+    return loadTopics(__extenedTopicsFile)
+
+def hasExtendedTopics():
+    extendedPath = os.path.join(dataDir, __extenedTopicsFile)
+    return os.path.exists(extendedPath)
 
 # Save topics after synonymous extended
-def saveExtendedTopics(topics, saveFile=extenedTopicsFile):
+def saveExtendedTopics(topics, saveFile=__extenedTopicsFile):
     savePath = os.path.join(dataDir, saveFile)
     if os.path.exists(savePath):
         os.remove(savePath)
