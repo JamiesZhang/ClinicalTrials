@@ -14,10 +14,16 @@ entry_pattern = re.compile(r'Entry Terms:(.*?)Previous Indexing:', re.DOTALL)
 entry_pattern2 = re.compile(r'Entry Terms:(.*?)All MeSH Categories', re.DOTALL)
 head_pattern = re.compile(r'1: ')
 
-def parse_syn(split_text):
+def parse_syn(split_text, sourceGene):
     syn = []
     start = False
     for line in split_text:
+        if line.strip()[0:5] == 'locus':
+            tempGene = line.strip().strip('locus').strip().strip(',').strip('\"')
+            if tempGene in sourceGene:
+                continue
+            else:
+                break
         if line.strip() == 'syn {':
             start = True
             continue
@@ -65,11 +71,13 @@ def find_all_relavant_genes(gene):
         id_fetch_url = '{}efetch.fcgi?db={}&id={}'.format(base, 'gene', id)
         resp = requests.get(id_fetch_url)
         split_text = resp.text.split('\n')
-        genes, start = parse_syn(split_text)
+        genes, start = parse_syn(split_text,gene)
         if start is False:
             print(id_fetch_url, 'No syn')
-        for g in genes:
-            all_genes.append(g)
+        if len(genes):
+            for g in genes:
+                all_genes.append(g)
+            break
     return all_genes
 
 # extract term in topic
@@ -83,10 +91,10 @@ ex_topics = open(ex_topic_path,'a')
 for i in range(len(diseases)):
     ex_topics.write("<topic_number=\"{}\">\n".format(i+1))
     relevant_disease = find_all_relavant_diseases(diseases[i])
-    ex_topics.write("\t<disease>{}</disease>\n".format(diseases[i] + ',' + ','.join(relevant_disease)))
+    ex_topics.write("\t<disease>{}</disease>\n".format(diseases[i] + '|' + ','.join(relevant_disease)))
     relevant_gene = find_all_relavant_genes(genes[i])
     relevant_gene.append(genes[i])
-    ex_topics.write("\t<gene>{}</gene>\n".format(','.join(relevant_gene)))
+    ex_topics.write("\t<gene>{}</gene>\n".format('|'.join(relevant_gene)))
     ex_topics.write("\t<demographic>{}</demographic>\n".format(demographic[i]))
     ex_topics.write("\t<other>{}</other>\n".format(other[i]))
     ex_topics.write("</topic>\n")
