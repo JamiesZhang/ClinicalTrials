@@ -25,7 +25,7 @@ class Topic(object):
         '''
         keysNum = len(kwargs.keys())
         if keysNum!=1 and keysNum!=5:
-            raise RuntimeError("Wrong parameters while creating Topic instance! Keys num is {}.".format(keysNum))
+            raise RuntimeError("Invalid parameters while creating Topic instance! Keys num is {}.".format(keysNum))
 
         if 'jsonStr' in kwargs.keys():
             jsonObj = json.loads(kwargs['jsonStr'])
@@ -84,7 +84,7 @@ def loadTopics(loadFile=__rawTopicsFile):
     DOMTree = xml.dom.minidom.parse(loadPath)
     rootNode = DOMTree.documentElement
     if rootNode.tagName != "topics":
-        raise RuntimeError("Wrong format of topics.xml! Tagname of root node is {}.".format(rootNode.tagName))
+        raise RuntimeError("Invalid format of topics.xml! Tagname of root node is {}.".format(rootNode.tagName))
 
     # Get all of topic nodes
     topicNodes = rootNode.getElementsByTagName(name = "topic")
@@ -146,15 +146,5 @@ def saveExtendedTopics(topics, saveFile=__extenedTopicsFile):
 
     with open(savePath, 'wb') as fp:
         fp.write(doc.toprettyxml(encoding='utf-8'))
-
-topics = loadRawTopics()
-print(topics[0].getDiseaseList())
-diseaseList = topics[0].getDiseaseList()
-diseaseList.append("HIV")
-topics[0].setDiseaseList(diseaseList)
-saveExtendedTopics(topics)
-
-newTopics = loadExtendedTopics()
-print(newTopics[0].getDiseaseList())
 
 
