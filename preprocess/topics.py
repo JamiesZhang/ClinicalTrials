@@ -49,12 +49,24 @@ class Topic(object):
     def __split(wordStr):
         return wordStr.split(sep)
 
+    def getNumber(self):
+        return self.number
+        
     def getDiseaseList(self):
         return Topic.__split(self.disease)
 
     def getGeneList(self):
         return Topic.__split(self.gene)
+    
+    def getAge(self):
+        return self.demographic.split(' ')[0].split('-')[0]
+    
+    def getGender(self):
+        return self.demographic.split(' ')[1]
 
+    def getOther(self):
+        return self.other
+        
     def setDiseaseList(self, diseaseList):
         self.disease = Topic.__join(diseaseList)
 
@@ -65,8 +77,8 @@ class Topic(object):
         '''
             Return the json object (python dict) of this topic instance which may be used in elasticsearch module.
         '''
-        jsonObj = {'number':self.number, 'disease':self.disease, 'gene':self.gene,
-                   'demographic':self.demographic, 'other':self.other}
+        jsonObj = { "number" : self.number, "disease" : self.disease, "gene" : self.gene, 
+                    "demographic" : self.demographic, "other" :self.other}
         return jsonObj
 
     def toJsonStr(self):
