@@ -8,6 +8,7 @@ dataDir = os.path.join(os.path.dirname(curDir), "data")
 
 __rawDataFile = "qrels-final-trials.txt"
 __rankingDataFilePrefix = "rankingDataset"
+__qrelsFilePrefix = "qrels"
 
 __topicsNum = 30
 __relevanceLevelNum = 3
@@ -38,7 +39,7 @@ def __hasDataset():
             return False
     return True
 
-def __loadRawData():
+def __loadRawDataAndSaveQrels():
     # rawData list has 30 topic lists
     # each topic list has 3 relevance lists
     # each relevance list has a list of docIDs
@@ -48,6 +49,13 @@ def __loadRawData():
         for j in range(__relevanceLevelNum):
             rawData[i].append([])
 
+    # prepare for saving qrels
+    fps = [None]*5
+    for i in range(__foldNum):
+        curQrelsFile = "{}{}.txt".format(__qrelsFilePrefix, i)
+        curQrelsPath = os.path.join(dataDir, curQrelsFile)
+        fps[i] = open(curQrelsPath, 'w')
+
     # load raw data into rawData list
     rawPath = os.path.join(dataDir, __rawDataFile)
     with open(rawPath, 'r') as fp:
@@ -55,15 +63,23 @@ def __loadRawData():
         while curLine:
             # queryID(1~30) 0 docID relevanceLevel(0~2)
             curItems = curLine.split(sep=' ')
-            curQueryID = int(curItems[0])
+            curTopicID = int(curItems[0])
             curDocID = curItems[2]
             curRelevanceLevel = int(curItems[3])
 
             # append curDocID
-            rawData[curQueryID - 1][curRelevanceLevel].append(curDocID)
+            rawData[curTopicID - 1][curRelevanceLevel].append(curDocID)
+
+            # save qrels
+            curFoldID, _ = __getFoldAndIndexByTopic(curTopicID)
+            fps[curFoldID].write(curLine)
 
             # get next line
             curLine = fp.readline()
+
+    # close fps for qrels
+    for i in range(__foldNum):
+        fps[i].close()
 
     return rawData
 
@@ -102,7 +118,7 @@ def __getFoldAndIndexByTopic(topicID):
 def __loadDataset():
     if not __hasDataset():
         # load rawData into list
-        rawData = __loadRawData()
+        rawData = __loadRawDataAndSaveQrels()
 
         # generate positive samples for ranking learning
         for i in range(__topicsNum):
