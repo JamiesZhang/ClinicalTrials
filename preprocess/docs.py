@@ -42,16 +42,57 @@ def loadDoc(loadFile=__rawDocFile):
     # rank = rootNode.getAttribute('rank')
     # get important doc node
     nct_id = str(rootNode.getElementsByTagName('nct_id')[0].firstChild.nodeValue)
-    brief_title = str(rootNode.getElementsByTagName('brief_title')[0].firstChild.nodeValue)
-    official_title = str(rootNode.getElementsByTagName('official_title')[0].firstChild.nodeValue)
-    brief_summary = str(rootNode.getElementsByTagName('textblock')[0].firstChild.nodeValue)
-    study_type = str(rootNode.getElementsByTagName('study_type')[0].firstChild.nodeValue) #Interventional or others
-    primary_purpose = str(rootNode.getElementsByTagName('primary_purpose')[0].firstChild.nodeValue)
-    gender = str(rootNode.getElementsByTagName('gender')[0].firstChild.nodeValue)
-    minimum_age = int(str(rootNode.getElementsByTagName('minimum_age')[0].firstChild.nodeValue).split(' ')[0])
-    maximum_age = int(str(rootNode.getElementsByTagName('maximum_age')[0].firstChild.nodeValue).split(' ')[0])
-    healthy_volunteers = str(rootNode.getElementsByTagName('healthy_volunteers')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('brief_title')) == 0:
+        brief_title = ''
+    else:
+        brief_title = str(rootNode.getElementsByTagName('brief_title')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('official_title')) == 0:
+        official_title = ''
+    else:
+        official_title = str(rootNode.getElementsByTagName('official_title')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('brief_summary')) == 0:
+        brief_summary = ''
+    else:
+        brief_summary = str(rootNode.getElementsByTagName('textblock')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('study_type')) == 0:
+        study_type = ''
+    else:
+        study_type = str(rootNode.getElementsByTagName('study_type')[0].firstChild.nodeValue) #Interventional or others
+    
+    if len(rootNode.getElementsByTagName('primary_purpose')) == 0:
+        primary_purpose = ''
+    else:
+        primary_purpose = str(rootNode.getElementsByTagName('primary_purpose')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('gender')) == 0:
+        gender = ''
+    else:
+        gender = str(rootNode.getElementsByTagName('gender')[0].firstChild.nodeValue)
+    
+    if len(rootNode.getElementsByTagName('minimum_age')) == 0:
+        minimum_age = 0
+    elif str(rootNode.getElementsByTagName('minimum_age')[0].firstChild.nodeValue).split(' ')[0].isdigit():
+        minimum_age = int(str(rootNode.getElementsByTagName('minimum_age')[0].firstChild.nodeValue).split(' ')[0])
+    else:
+        minimum_age = 0
+    
+    if len(rootNode.getElementsByTagName('maximum_age')) == 0:
+        maximum_age = 0
+    elif str(rootNode.getElementsByTagName('maximum_age')[0].firstChild.nodeValue).split(' ')[0].isdigit():
+        maximum_age = int(str(rootNode.getElementsByTagName('maximum_age')[0].firstChild.nodeValue).split(' ')[0])
+    else:
+        maximum_age = 0
+    
+    if len(rootNode.getElementsByTagName('healthy_volunteers')) == 0:
+        healthy_volunteers = ''
+    else:
+        healthy_volunteers = str(rootNode.getElementsByTagName('healthy_volunteers')[0].firstChild.nodeValue)
     # mesh_term = str(rootNode.getElementsByTagName('mesh_term')[0].firstChild)
+    
     docs = Document(nct_id=nct_id, brief_title=brief_title, official_title=official_title, brief_summary=brief_summary, study_type=study_type, 
                     primary_purpose=primary_purpose, gender=gender, minimum_age=minimum_age, maximum_age=maximum_age,
                     healthy_volunteers=healthy_volunteers)

@@ -2,7 +2,8 @@
 
 import sys
 import os
-curDir = os.path.dirname(__file__)
+# curDir = os.path.dirname(__file__)#不知道为什么，windows下结果一样，但是linux下，不对！！！！
+curDir = os.path.dirname(os.path.abspath(__file__)) #这样才对
 parentDir = os.path.dirname(curDir)
 sys.path.append(parentDir)
 from preprocess import topics,docs
@@ -15,91 +16,97 @@ dataDir = os.path.join(parentDir, 'data')
 docDir = os.path.join(dataDir, 'clinicaltrials_xml')
 resultDir = os.path.join(dataDir, 'result.txt')
 
-initIndexBody = {
-    "settings": {
-        # "similarity" : {          #setting bm25 https://elasticsearch.cn/book/elasticsearch_definitive_guide_2.x/changing-similarities.html
-        #     "my_bm25": { 
-        #         "type": "BM25",
-        #         "b":    0 
-        #     }
-        # },
-        "analysis": {
-            "filter": {
-                "english_stop": {
-                    "type":       "stop",
-                    "stopwords":  "_english_"
+# simiModule: default,bm25 or vsm
+def Body(simModule):
+    initIndexBody = {
+        "settings": {
+            # "similarity" : {          #setting bm25 https://elasticsearch.cn/book/elasticsearch_definitive_guide_2.x/changing-similarities.html
+            #     "my_bm25": { 
+            #         "type": "BM25",
+            #         "b":    0 
+            #     }
+            # },
+            "analysis": {
+                "filter": {
+                    "english_stop": {
+                        "type":       "stop",
+                        "stopwords":  "_english_"
+                    },
+                    "light_english_stemmer": {
+                        "type":       "stemmer",
+                        "language":   "light_english" 
+                    },
+                    "english_possessive_stemmer": {
+                        "type":       "stemmer",
+                        "language":   "possessive_english"
+                    }
                 },
-                "light_english_stemmer": {
-                    "type":       "stemmer",
-                    "language":   "light_english" 
-                },
-                "english_possessive_stemmer": {
-                    "type":       "stemmer",
-                    "language":   "possessive_english"
-                }
-            },
-            "analyzer": {
-                "my_analyzer": {
-                    "type":  "standard",
-                    "filter": [
-                        "english_possessive_stemmer",
-                        "lowercase",
-                        "english_stop",
-                        "light_english_stemmer", 
-                        "asciifolding" 
-                    ]
+                "analyzer": {
+                    "my_analyzer": {
+                        "type":  "standard",
+                        "filter": [
+                            "english_possessive_stemmer",
+                            "lowercase",
+                            "english_stop",
+                            "light_english_stemmer", 
+                            "asciifolding" 
+                        ]
+                    }
                 }
             }
-        }
-    },
-    "mapping" : {
-        "trial" :{
-            "properties" : {
-                "nct_id" : {
-                    "type" : "string",
-                    "index" : "not_analyzed"
-                },
-                "brief_title" : {
-                    "type" : "string",
-                    "similarity": "default"
-                },
-                "official_title" : {
-                    "type" : "string",
-                    "similarity": "default"
-                },
-                "brief_summary" : {
-                    "type" : "string",
-                    "similarity": "BM25"            # set similarity model, default is tf-idf
-                },
-                "study_type" :{
-                    "type" : "string"
-                },
-                "primary_purpose" : {
-                    "type" : "string"
-                },
-                "gender" : {
-                    "type" : "string"
-                },
-                "minimum_age" : {
-                    "type" : "integer"
-                },
-                "maximum_age" : {
-                    "type" : "integer"
-                },
-                "healthy_volunteers" : {
-                    "type" : "string"
+        },
+        "mapping" : {
+            "trial" :{
+                "properties" : {
+                    "nct_id" : {
+                        "type" : "string",
+                        "index" : "not_analyzed"
+                    },
+                    "brief_title" : {
+                        "type" : "string",
+                        "similarity": simModule
+                    },
+                    "official_title" : {
+                        "type" : "string",
+                        "similarity": simModule
+                        # "boost" : 1
+                    },
+                    "brief_summary" : {
+                        "type" : "string",
+                        "similarity": simModule            # set similarity module, default is tf-idf
+                    },
+                    "study_type" :{
+                        "type" : "string"
+                    },
+                    "primary_purpose" : {
+                        "type" : "string"
+                    },
+                    "gender" : {
+                        "type" : "string"
+                    },
+                    "minimum_age" : {
+                        "type" : "integer"
+                    },
+                    "maximum_age" : {
+                        "type" : "integer"
+                    },
+                    "healthy_volunteers" : {
+                        "type" : "string"
+                    }
                 }
             }
         }
     }
-}
-
+    return initIndexBody
 # connect to es ser ver
 es = Elasticsearch([{'host':'localhost', 'port' : 9200}])
 
+def initIndex(indexName, Module):
+    es.indices.create(index=indexName, body=Body(Module))
+
 # add document to index, and set doc's is in index
-def addIndex(docBody, id):
-    es.index(index='clinicaltrials', doc_type='trial', id=id, body=docBody)
+def addIndex(indexName, id, docBody):
+    es.index(index=indexName, doc_type='trial', id=id, body=docBody)
 
 # test connection
 req = requests.get(r'http://localhost:9200')
@@ -107,7 +114,7 @@ if req.status_code != 200:
     raise RuntimeError('connection failure')
 
 # init the index
-es.index(index='clinicaltrials', doc_type='trial', id=id, body=initIndexBody)
+
 
 # convert each document to json object
 dir0 = os.listdir(docDir)     #000 001 002...
@@ -123,6 +130,8 @@ for i in range(len(dir0)):
             jsonDoc = rawDoc.toJsonObj()
             docId = rawDoc.getDocId()
             try:
-                addIndex(jsonDoc, docId)         # add document to index
+                addIndex("clinicaltrials_bm25", docId, jsonDoc)         # add document to index
+                addIndex("clinicaltrials_tfidf", docId, jsonDoc)
             except Exception as e:
                 print(e)
+print('Creat index successful!')
