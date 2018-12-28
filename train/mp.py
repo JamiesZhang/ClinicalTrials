@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 import numpy as np
 from preprocess import rankingDataset
+from Search.search import getScoreList
 
 curDir = os.path.dirname(os.path.abspath(__file__))
 
@@ -80,9 +81,6 @@ def __hasModels():
             return False
     return True
 
-def getInputData(topicID, docID):
-    return []
-
 __models = [None] * rankingDataset.__foldNum
 
 if not __hasModels():
@@ -96,8 +94,8 @@ if not __hasModels():
             topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
             for j in range(len(trainset[indexID])):
                 largerDocID, smallerDocID = trainset[indexID][j]
-                largerData = getInputData(topicID, largerDocID)
-                smallerData = getInputData(topicID, smallerDocID)
+                largerData = getScoreList(topicID, largerDocID)
+                smallerData = getScoreList(topicID, smallerDocID)
                 dataset.append([largerData, smallerData])
 
         # train model
