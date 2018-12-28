@@ -26,10 +26,12 @@ class Document(object):
         '''
             Return the json object (python dict) of this topic instance which may be used in elasticsearch module.
         '''
+        # jsonObj = {"nct_id": self.nct_id, "brief_title": self.brief_title, "official_title": self.official_title,
+        #         "brief_summary":self.brief_summary, "study_type":self.study_type,
+        #         "primary_purpose":self.primary_purpose, "gender":self.gender, "minimum_age":self.minimum_age,
+        #         "maximum_age":self.maximum_age, "healthy_volunteers":self.healthy_volunteers}
         jsonObj = {"nct_id": self.nct_id, "brief_title": self.brief_title, "official_title": self.official_title,
-                "brief_summary":self.brief_summary, "study_type":self.study_type,
-                "primary_purpose":self.primary_purpose, "gender":self.gender, "minimum_age":self.minimum_age,
-                "maximum_age":self.maximum_age, "healthy_volunteers":self.healthy_volunteers}
+                "brief_summary":self.brief_summary}
         return jsonObj
     
     def getDocId(self):
