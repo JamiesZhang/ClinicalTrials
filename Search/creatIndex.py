@@ -20,6 +20,8 @@ resultDir = os.path.join(dataDir, 'result.txt')
 def Body(simModule):
     initIndexBody = {
         "settings": {
+            "number_of_shards": "2",
+            "number_of_replicas": "0",
             # "similarity" : {          #setting bm25 https://elasticsearch.cn/book/elasticsearch_definitive_guide_2.x/changing-similarities.html
             #     "my_bm25": { 
             #         "type": "BM25",
@@ -134,4 +136,6 @@ for i in range(len(dir0)):
                 addIndex("clinicaltrials_tfidf", docId, jsonDoc)
             except Exception as e:
                 print(e)
+        print('finish dir {}'.format(dir1[j]))
+    print('finish dir {}'.format(dir0[i]))
 print('Creat index successful!')
