@@ -159,7 +159,7 @@ def __loadDataset():
                     curItems = curLine.split(' ')
                     curTopicID = int(curItems[0])
                     curLargerDocID = curItems[1]
-                    curSmallerDocID = curItems[2]
+                    curSmallerDocID = curItems[2][0:-1]
 
                     # get corresponding fold ID (0~4) and index ID (0~5)
                     curIndexID = __getIndexByTopic(foldID, curTopicID)

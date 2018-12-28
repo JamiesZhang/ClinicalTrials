@@ -101,7 +101,6 @@ def loadTopics(loadFile=__rawTopicsFile):
     # Get all of topic nodes
     topicNodes = rootNode.getElementsByTagName(name = "topic")
     topics = [None]*len(topicNodes) # List of Topic instances
-    print(len(topics))
     for topicNode in topicNodes:
         number = int(topicNode.getAttribute("number"))
         disease = str(topicNode.getElementsByTagName("disease")[0].firstChild.nodeValue)

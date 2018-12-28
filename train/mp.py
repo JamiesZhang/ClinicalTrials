@@ -91,8 +91,10 @@ if not __hasModels():
         # build dataset
         dataset = [] # n*2*18
         for indexID in range(len(trainset)):
+            print(indexID, len(trainset[indexID]))
             topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
             for j in range(len(trainset[indexID])):
+                print(j)
                 largerDocID, smallerDocID = trainset[indexID][j]
                 largerData = getScoreList(topicID, largerDocID)
                 smallerData = getScoreList(topicID, smallerDocID)
