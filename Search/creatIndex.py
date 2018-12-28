@@ -20,7 +20,7 @@ resultDir = os.path.join(dataDir, 'result.txt')
 def Body(simModule):
     initIndexBody = {
         "settings": {
-            "number_of_shards": "2",
+            "number_of_shards": "4",
             "number_of_replicas": "0",
             # "similarity" : {          #setting bm25 https://elasticsearch.cn/book/elasticsearch_definitive_guide_2.x/changing-similarities.html
             #     "my_bm25": { 
@@ -76,24 +76,6 @@ def Body(simModule):
                     "brief_summary" : {
                         "type" : "string",
                         "similarity": simModule            # set similarity module, default is tf-idf
-                    },
-                    "study_type" :{
-                        "type" : "string"
-                    },
-                    "primary_purpose" : {
-                        "type" : "string"
-                    },
-                    "gender" : {
-                        "type" : "string"
-                    },
-                    "minimum_age" : {
-                        "type" : "integer"
-                    },
-                    "maximum_age" : {
-                        "type" : "integer"
-                    },
-                    "healthy_volunteers" : {
-                        "type" : "string"
                     }
                 }
             }
@@ -116,7 +98,8 @@ if req.status_code != 200:
     raise RuntimeError('connection failure')
 
 # init the index
-
+initIndex("clinicaltrials_bm25",Body("BM25"))
+initIndex("clinicaltrials_tfidf",Body("default"))
 
 # convert each document to json object
 dir0 = os.listdir(docDir)     #000 001 002...
@@ -137,5 +120,4 @@ for i in range(len(dir0)):
             except Exception as e:
                 print(e)
         print('finish dir {}'.format(dir1[j]))
-    print('finish dir {}'.format(dir0[i]))
 print('Creat index successful!')
