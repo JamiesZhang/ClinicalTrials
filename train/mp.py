@@ -4,7 +4,6 @@ import os
 import tensorflow as tf
 import numpy as np
 from preprocess import rankingDataset
-from Search.search import getScoreList
 
 curDir = os.path.dirname(os.path.abspath(__file__))
 
@@ -88,17 +87,12 @@ if not __hasModels():
         __models[modelID] = __buildModel()
         _, _, trainset = rankingDataset.constructDatasetForModel(modelID)
 
-        # build dataset
+        # load dataset
         dataset = [] # n*2*18
         for indexID in range(len(trainset)):
-            print(indexID, len(trainset[indexID]))
-            topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
+            # topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
             for j in range(len(trainset[indexID])):
-                print(j)
-                largerDocID, smallerDocID = trainset[indexID][j]
-                largerData = getScoreList(topicID, largerDocID)
-                smallerData = getScoreList(topicID, smallerDocID)
-                dataset.append([largerData, smallerData])
+                dataset.append(trainset[indexID][j])
 
         # train model
         print("Train the {}th model...".format(modelID))
