@@ -14,6 +14,13 @@ __searchModelNum = 2
 __topicFieldNum = 3
 __docFieldNum = 3
 
+__inputTensorXName = "inputx"
+__inputTensorYName = "inputy"
+__docVariableTensorName = "docVariable"
+__topicVariableTensorName = "topicVariable"
+__searchVariableTensorName = "searchVariable"
+__finalTensorName = "train"
+
 class RankingWeightedSumLayer(tf.keras.layers.Layer):
     def __init__(self, outputDim, **kwargs):
         self.outputDim = outputDim
@@ -56,45 +63,56 @@ class RankingWeightedSumLayer(tf.keras.layers.Layer):
         return cls(**config)
 
 def __buildModel():
-    # compute dimensions
-    docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 18
-    topicLayerDim = __searchModelNum * __topicFieldNum # 6
-    searchLayerDim = __searchModelNum # 2
+    with tf.Graph().as_default():
+        # compute dimensions
+        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 18
+        topicLayerDim = __searchModelNum * __topicFieldNum # 6
+        searchLayerDim = __searchModelNum # 2
 
-    # layer 0: input layer
-    inputTensor = tf.keras.Input(shape=(2, docLayerDim)) # n*2*18
+        # layer 0: input layer
+        inputTensorX = tf.placeholder(shape=(-1, 2, docLayerDim), name=__inputTensorXName) # n*2*18
+        inputTensorY = tf.placeholder(shape=(-1, 1), name=__inputTensorYName) # n*1
 
-    # layer 1: doc-field layer
-    docVariableTensor = tf.keras.backend.variable(np.random.randn(docLayerDim)) # 18
-    dotTensor1 = inputTensor * docVariableTensor # n*2*18
-    reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
-    reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
+        # layer 1: doc-field layer
+        docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName) # 18
+        dotTensor1 = inputTensorX * docVariableTensor # n*2*18
+        reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
+        reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
 
-    # layer 2: topic-field layer
-    topicVariableTensor = tf.keras.backend.variable(np.random.randn(topicLayerDim)) # 6
-    dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
-    reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
-    reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
+        # layer 2: topic-field layer
+        topicVariableTensor = tf.Variable(np.random.randn(topicLayerDim), name=__topicVariableTensorName) # 6
+        dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
+        reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
+        reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
 
-    # layer 3: search-field layer
-    searchVariableTensor = tf.keras.backend.variable(np.random.randn(searchLayerDim)) # 2
-    dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
-    reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
-    reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
+        # layer 3: search-field layer
+        searchVariableTensor = tf.Variable(np.random.randn(searchLayerDim), name=__searchVariableTensorName) # 2
+        dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
+        reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
+        reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
 
-    # final layer: output layer
-    def matmul(tensor):
+        # final layer: output layer
         constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
-        return tf.matmul(tf.reduce_sum(tensor, 2), constantTensor)
-    outputTensor = tf.keras.layers.Lambda(matmul).forward(reduceSumTensor3) # n*1
+        outputTensor = tf.matmul(tf.reduce_sum(reduceSumTensor3, 2), constantTensor) # n*1
 
-    # build model
-    model = tf.keras.Model(inputs=inputTensor, outputs=outputTensor)
+        # set optimizer and loss function
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputTensor, labels=inputTensorY))
+        optimizer = tf.train.AdamOptimizer(1e-4)
+        min_operation = optimizer.minimize(loss, name=__finalTensorName)
 
-    # set optimizer and loss function
-    model.compile(optimizer=tf.train.AdamOptimizer(1e-4), loss='categorical_crossentropy',metrics=['accuracy'])
+    return min_operation
 
-    return model
+def __fit(trainModel, sess, dataset, labels, batch_size=32, epochs=3):
+    length = len(dataset)
+    batchTimes = int(length/batch_size)
+
+    sess.run(tf.global_variables_initializer())
+    for epoch in range(epochs):
+        for batchIndex in range(batchTimes):
+            indexes = np.random.choice(a=length, size=batch_size)
+            x = tf.get_default_graph().get_tensor_by_name(__inputTensorXName+":0")
+            y_ = tf.get_default_graph().get_tensor_by_name(__inputTensorYName + ":0")
+            sess.run(trainModel, feed_dict={x: dataset[indexes], y_: dataset[indexes]})
 
 def __hasModels():
     for i in range(rankingDataset.__foldNum):
@@ -107,36 +125,45 @@ def __hasModels():
 __models = [None] * rankingDataset.__foldNum
 
 if not __hasModels():
-    for modelID in range(rankingDataset.__foldNum):
-        __models[modelID] = __buildModel()
-        _, _, trainset = rankingDataset.constructDatasetForModel(modelID)
+    with tf.Session().as_default() as sess:
+        saver = tf.train.Saver()
+        for modelID in range(rankingDataset.__foldNum):
+            __models[modelID] = __buildModel()
+            _, _, trainset = rankingDataset.constructDatasetForModel(modelID)
 
-        # load dataset
-        dataset = [] # n*2*18
-        for indexID in range(len(trainset)):
-            # topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
-            for j in range(len(trainset[indexID])):
-                dataset.append(trainset[indexID][j])
+            # load dataset
+            dataset = [] # n*2*18
+            for indexID in range(len(trainset)):
+                # topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
+                for j in range(len(trainset[indexID])):
+                    dataset.append(trainset[indexID][j])
 
-        # train model
-        print("Train the {}th model...".format(modelID))
-        labels = [[1.] * len(dataset)] # n*1
-        __models[modelID].fit(dataset, labels, batch_size=32, epochs=3)
-        print("Success!")
+            # train model
+            print("Train the {}th model...".format(modelID))
+            labels = [[1.] * len(dataset)] # n*1
+            __fit(trainModel=__models[modelID], sess=sess, dataset=dataset, labels=labels, batch_size=32, epochs=3)
+            print("Success!")
 
-        # save model
-        print("Save the {}th model...".format(modelID))
-        curModelFile = "{}{}.model".format(__modelFilePrefix, modelID)
-        curModelPath = os.path.join(modelDir, curModelFile)
-        __models[modelID].save(curModelPath)
-        print("Success!")
+            # save model
+            print("Save the {}th model...".format(modelID))
+            curModelFile = "{}{}.model".format(__modelFilePrefix, modelID)
+            curModelPath = os.path.join(modelDir, curModelFile)
+            # constant_graph = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, [__finalTensorName])
+            # if tf.gfile.Exists(curModelPath):
+            #     tf.gfile.Remove(curModelPath)
+            # with tf.gfile.FastGFile(curModelPath, mode="wb") as fd:
+            #     fd.write(constant_graph.SerializeToString())
+            saver.save(sess, curModelPath)
+            print("Success!")
 else:
     # load existed models
     for modelID in range(rankingDataset.__foldNum):
         print("Load the {}th model...".format(modelID))
         curModelFile = "{}{}.model".format(__modelFilePrefix, modelID)
         curModelPath = os.path.join(modelDir, curModelFile)
-        __models[modelID] = tf.keras.models.load_model(curModelPath)
+
+        saver = tf.train.import_meta_graph(curModelPath+"*.meta")
+        __models[modelID] = saver.restore(curModelPath)
 
 # __model = __buildModel()
 # data0 = [[i for i in range(18)],[i-1 for i in range(18)]]
