@@ -10,6 +10,7 @@ from preprocess import topics,docs, rankingDataset
 from elasticsearch import Elasticsearch
 import requests
 from train import mp
+import math
 
 curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
 parentDir = os.path.dirname(curDir)
@@ -32,7 +33,7 @@ def queryBody(queryTopicId, topicBoostList, docBoostList):
     body = {
         "query" : {
             "bool" : {
-                "must" : [
+                "should" : [
                     {
                         "multi_match" : {
                             "query" : disease,
@@ -83,7 +84,7 @@ def getResultList(topicId, method, topicBoostList, docBoostList, methodBoost):
         resDic.update(res)
     return resDic
 
-def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostList):
+def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostList, t):
     bm25Boost = methodBoostList[0]
     tfidfBoost = methodBoostList[1]
 
@@ -95,11 +96,12 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
 
     bm25Result = {}
     tfidfResult = {}
-    finalResult = {}
 
-    f = open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a')
+    f = open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'w')
     
     for topicId in topicList:
+        s = 
+        finalResult = {}
         topicID = topicId
         topicID -= 1
         bm25Result =  getResultList(topicID, bm25Index, bm25TopicBoostList, bm25DocBoostList, bm25Boost)
@@ -107,19 +109,17 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
         for docId in tfidfResult.keys():
             if docId in bm25Result.keys():
                 finalScore = bm25Result[docId] + tfidfResult[docId]
-                bm25Result.update({docId : finalScore})
             else:
                 finalScore = tfidfResult[docId]
-                bm25Result.update({docId : finalScore})
+            finalScore = finalScore*math.log(1+t*s)
+            bm25Result.update({docId : finalScore})
         finalResult = bm25Result
         finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
 
         r = 0  # ranking number
         for res in finalResult:
-            print(topicID+1)
             f.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
             r += 1
-
     f.close()
 
 for module in range(5):
@@ -127,3 +127,4 @@ for module in range(5):
     topicList = rankingDataset.getTopicIDsForTest(module)
     resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList)
     print('finish module {}'.format(module))
+
