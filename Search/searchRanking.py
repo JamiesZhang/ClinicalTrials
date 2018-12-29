@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # use boost(get from train module) to search and get a rank of documents
-
 import sys
 import os
 curDir = os.path.dirname(__file__)
@@ -10,6 +9,10 @@ sys.path.append(parentDir)
 from preprocess import topics,docs
 from elasticsearch import Elasticsearch
 import requests
+
+curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
+parentDir = os.path.dirname(curDir)
+dataDir = os.path.join(parentDir, 'data')
 
 # connect to es ser ver
 es = Elasticsearch([{'host':'localhost', 'port' : 9200}])
@@ -70,49 +73,42 @@ def mySearch(index, topicId, topicBoostList, docBoostList):
     result = es.search(index = index, doc_type='trial', body=queryBody(topicId, topicBoostList, docBoostList), size=50)['hits']['hits']
     return result
 
-# if I got these attribute
-methodBoostList = []
-topicBoostList = []
-docBoostList = []
+# for a query topicId, get all result :{docID：sorce}
+def getResultList(topicId, method, topicBoostList, docBoostList, methodBoost):
+    resDic = {}
+    Results = mySearch(method, topicId, topicBoostList, docBoostList)
+    for hit in Results:
+        res = {hit["_id"] : hit["_score"]*methodBoost}
+        resDic.update(res)
+    return resDic
 
-bm25TopicBoostList = topicBoostList[:3]
-tfidfTopicBoostList = topicBoostList[3:]
+def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostList):
+    bm25Boost = methodBoostList[0]
+    tfidfBoost = methodBoostList[1]
 
-bm25DocBoostList = docBoostList[:9]
-tfidfDocBoostList = docBoostList[9:]
+    bm25TopicBoostList = topicBoostList[:3]
+    tfidfTopicBoostList = topicBoostList[3:]
 
-bm25Boost = methodBoostList[0]
-tfidfBoost = methodBoostList[1]
+    bm25DocBoostList = docBoostList[:9]
+    tfidfDocBoostList = docBoostList[9:]
 
-bm25ResultList = []
-tfidfResultList = []
-
-def getResultList(method, topicBoostList, docBoostList):
-    List = []
-    for topicId in range(30):
-        bm25Results = mySearch(method, id, topicBoostList, docBoostList)
-        for hit in bm25Results:
-            resList = [topicId , {hit["_id"], hit["_score"]}]
-            List.append(resList)
-    return List
-
-bm25ResultList = getResultList(bm25Index, bm25TopicBoostList, bm25DocBoostList)
-tfidfResultList = getResultList(tfidfIndex, tfidfTopicBoostList, tfidfDocBoostList)
-
-# the final ranking list!!!
-finalResultList = []
-
-for topicId in range(30):                           #针对每一个topic查询
-    for bm25Result in bm25ResultList:               #每一个查询中的docID和分数
-        if bm25Result[0] == topicId:                #如果是当前查询的结果
-            for docId in bm25Result[1].keys():      #对于每一个文档doc
-                for tfidfResult in tfidfResultList: #寻找tfidf结果中响应的文档
-                    if (tfidfResult[0] == topicId) and (docId in tfidfResult[1].keys()): #如果找到了相应的文档，则计算final的分数
-                        finalScore = bm25Boost * bm25Result[1][docId] + \
-                                     tfidfBoost * tfidfResult[1][docId]
-                        finalResult = [topicId, docId, finalScore]
-                        finalResultList.append(finalResult)
-                    else:                           # 如果没有找到相应的文档，则找下一个文档
-                        continue                    # 是用continue还是break？？？？？？？？脑子不转了。。。
-        else:       #说明针对于topicID的这个查询查完了，继续下一个TopicID的查询
-            break
+    bm25Result = {}
+    tfidfResult = {}
+    finalResult = {}
+    for topicId in topicList:
+        bm25Result =  getResultList(topicId, bm25Index, bm25TopicBoostList, bm25DocBoostList, bm25Boost)
+        tfidfResult = getResultList(topicId, tfidfIndex, tfidfTopicBoostList, tfidfDocBoostList, tfidfBoost)
+        for docId in tfidfResult.keys():
+            if docId in bm25Result.keys():
+                finalScore = bm25Result[docId] + tfidfResult[docId]
+                bm25Result.update({docId : finalScore})
+            else:
+                finalScore = tfidfResult[docId]
+                bm25Result.update({docId : finalScore})
+        finalResult = bm25Result
+        finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
+        with open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a') as f:
+            r = 0
+            for res in finalResult:
+                f.write(topicId, "Q0", res[0], r, res[1], "SZIR")
+                r += 1
