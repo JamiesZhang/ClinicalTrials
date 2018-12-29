@@ -61,11 +61,33 @@ def __buildModel():
     topicLayerDim = __searchModelNum * __topicFieldNum # 6
     searchLayerDim = __searchModelNum # 2
 
+    # layer 0: input layer
+    inputTensor = tf.keras.Input(shape=(2, docLayerDim)) # n*2*18
+
+    # layer 1: doc-field layer
+    docVariableTensor = tf.keras.backend.variable(np.random.randn(docLayerDim)) # 18
+    dotTensor1 = inputTensor * docVariableTensor # n*2*18
+    reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
+    reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
+
+    # layer 2: topic-field layer
+    topicVariableTensor = tf.keras.backend.variable(np.random.randn(topicLayerDim)) # 6
+    dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
+    reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
+    reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
+
+    # layer 3: search-field layer
+    searchVariableTensor = tf.keras.backend.variable(np.random.randn(searchLayerDim)) # 2
+    dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
+    reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
+    reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
+
+    # final layer: output layer
+    constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
+    outputTensor = tf.matmul(tf.reduce_sum(reduceSumTensor3, 2), constantTensor) # n*1
+
     # build model
-    model = tf.keras.Sequential()
-    model.add(RankingWeightedSumLayer(topicLayerDim, input_shape=(2, docLayerDim)))
-    model.add(RankingWeightedSumLayer(searchLayerDim))
-    model.add(RankingWeightedSumLayer(1))
+    model = tf.keras.Model(inputs=inputTensor, outputs=outputTensor)
 
     # set optimizer and loss function
     model.compile(optimizer=tf.train.AdamOptimizer(1e-4), loss='categorical_crossentropy',metrics=['accuracy'])
@@ -96,7 +118,7 @@ if not __hasModels():
 
         # train model
         print("Train the {}th model...".format(modelID))
-        labels = [1] * len(dataset)
+        labels = [[1.] * len(dataset)] # n*1
         __models[modelID].fit(dataset, labels, batch_size=32, epochs=3)
         print("Success!")
 
