@@ -76,6 +76,24 @@ def Body(simModule):
                     "brief_summary" : {
                         "type" : "string",
                         "similarity": simModule            # set similarity module, default is tf-idf
+                    },
+                    "study_type" :{
+                        "type" : "string"
+                    },
+                    "primary_purpose" : {
+                        "type" : "string"
+                    },
+                    "gender" : {
+                        "type" : "string"
+                    },
+                    "minimum_age" : {
+                        "type" : "integer"
+                    },
+                    "maximum_age" : {
+                        "type" : "integer"
+                    },
+                    "healthy_volunteers" : {
+                        "type" : "string"
                     }
                 }
             }
@@ -86,7 +104,10 @@ def Body(simModule):
 es = Elasticsearch([{'host':'localhost', 'port' : 9200}])
 
 def initIndex(indexName, Module):
-    es.indices.create(index=indexName, body=Body(Module))
+    if es.indices.exists(index=indexName):
+        print("The index is already exists!!!")
+    else:
+        es.indices.create(index=indexName, body=Body(Module))
 
 # add document to index, and set doc's is in index
 def addIndex(indexName, id, docBody):
