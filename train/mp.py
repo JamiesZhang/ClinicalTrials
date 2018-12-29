@@ -63,7 +63,7 @@ def __buildModel(batchSize,modelID):
         reluTensor3 = tf.reduce_sum(tf.nn.relu(reduceSumTensor3), 2) # n*2
 
         # layer 4: word2vec layer
-        word2vecVariableTensor = tf.Variable(np.random.randn(2), name=__word2vecVariableTensorName) # 1
+        word2vecVariableTensor = tf.Variable(np.random.randn(1), name=__word2vecVariableTensorName+str(modelID)) # 1
         logTensor = reluTensor3 * tf.log(word2vecVariableTensor * inputTensorS + tf.constant(1., dtype=tf.float64)) # n*2
         reluTensor4 = tf.nn.relu(logTensor) # n*2
 
@@ -132,11 +132,6 @@ if not __hasModels():
         curModelFile = "{}{}.model".format(__modelFilePrefix, modelID)
         curSubDir = os.path.join(modelDir, "{}{}".format(__subDirPrefix, modelID))
         curModelPath = os.path.join(curSubDir, curModelFile)
-        # constant_graph = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, [__finalTensorName])
-        # if tf.gfile.Exists(curModelPath):
-        #     tf.gfile.Remove(curModelPath)
-        # with tf.gfile.FastGFile(curModelPath, mode="wb") as fd:
-        #     fd.write(constant_graph.SerializeToString())
         with graph.as_default():
             saver = tf.train.Saver()
         saver.save(sess, curModelPath)
