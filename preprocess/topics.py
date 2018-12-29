@@ -73,6 +73,9 @@ class Topic(object):
     def setGeneList(self, geneList):
         self.gene = Topic.__join(geneList)
 
+    def toQueryStr(self):
+        return ' '.join(self.getDiseaseList())+' '.join(self.getGeneList())+self.getOther()
+
     def toJsonObj(self):
         '''
             Return the json object (python dict) of this topic instance which may be used in elasticsearch module.
@@ -158,4 +161,7 @@ def saveExtendedTopics(topics, saveFile=__extenedTopicsFile):
     with open(savePath, 'wb') as fp:
         fp.write(doc.toprettyxml(encoding='utf-8'))
 
+__topicList = loadRawTopics()
 
+def getTopicByID(topicID):
+    return __topicList[topicID-1]
