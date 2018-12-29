@@ -2,12 +2,14 @@
 
 import os
 import math
+from Search.search import getScoreList
 
 curDir = os.path.dirname(__file__)
 dataDir = os.path.join(os.path.dirname(curDir), "data")
 
 __rawDataFile = "qrels-final-trials.txt"
 __rankingDataFilePrefix = "rankingDataset"
+__qrelsFilePrefix = "qrels"
 
 __topicsNum = 30
 __relevanceLevelNum = 3
@@ -38,7 +40,7 @@ def __hasDataset():
             return False
     return True
 
-def __loadRawData():
+def __loadRawDataAndSaveQrels():
     # rawData list has 30 topic lists
     # each topic list has 3 relevance lists
     # each relevance list has a list of docIDs
@@ -48,6 +50,13 @@ def __loadRawData():
         for j in range(__relevanceLevelNum):
             rawData[i].append([])
 
+    # prepare for saving qrels
+    fps = [None]*5
+    for foldID in range(__foldNum):
+        curQrelsFile = "{}{}.txt".format(__qrelsFilePrefix, foldID)
+        curQrelsPath = os.path.join(dataDir, curQrelsFile)
+        fps[foldID] = open(curQrelsPath, 'w')
+
     # load raw data into rawData list
     rawPath = os.path.join(dataDir, __rawDataFile)
     with open(rawPath, 'r') as fp:
@@ -55,30 +64,46 @@ def __loadRawData():
         while curLine:
             # queryID(1~30) 0 docID relevanceLevel(0~2)
             curItems = curLine.split(sep=' ')
-            curQueryID = int(curItems[0])
+            curTopicID = int(curItems[0])
             curDocID = curItems[2]
             curRelevanceLevel = int(curItems[3])
 
             # append curDocID
-            rawData[curQueryID - 1][curRelevanceLevel].append(curDocID)
+            rawData[curTopicID - 1][curRelevanceLevel].append(curDocID)
+
+            # save qrels
+            curFoldID, _ = __getFoldAndIndexByTopic(curTopicID)
+            fps[curFoldID].write(curLine)
 
             # get next line
             curLine = fp.readline()
 
+    # close fps for qrels
+    for foldID in range(__foldNum):
+        fps[foldID].close()
+
     return rawData
 
-def __saveDataset():
-    for foldID in range(__foldNum):
-        curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
-        curDataPath = os.path.join(dataDir, curDataFile)
-        with open(curDataPath, 'w') as fp:
-            for indexID in range(__topicsNumPerFold):
-                curTopicID = __topicFolds[foldID][indexID]
-                curSampleList = __rankingData[foldID][indexID]
-                for i in range(len(curSampleList)):
-                    largerDocID, smallerDocID = curSampleList[i]
-                    lineStr = ' '.join([str(curTopicID),largerDocID,smallerDocID]) + '\n'
-                    fp.write(lineStr)
+def __saveDataset(foldID, indexID):
+    curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
+    curDataPath = os.path.join(dataDir, curDataFile)
+    with open(curDataPath, 'a') as fp:
+        curTopicID = __topicFolds[foldID][indexID]
+        curDataList = __rankingData[foldID][indexID]
+        for i in range(len(curDataList)):
+            largerScoreList, smallerScoreList = curDataList[i]
+
+            # float to string
+            largerScoreStrList = [0]*len(largerScoreList)
+            smallerScoreStrList = [0]*len(smallerScoreList)
+            for i in range(len(largerScoreList)):
+                largerScoreStrList[i] = str(largerScoreList[i])
+                smallerScoreStrList[i] = str(smallerScoreList[i])
+
+            largerScoreStr = ' '.join(largerScoreStrList)
+            smallerScoreStr = ' '.join(smallerScoreStrList)
+            lineStr = ' '.join([str(curTopicID),largerScoreStr,smallerScoreStr]) + '\n'
+            fp.write(lineStr)
 
 def __getIndexByTopic(foldID, topicID):
     curIndexID = -1
@@ -101,10 +126,23 @@ def __getFoldAndIndexByTopic(topicID):
 
 def __loadDataset():
     if not __hasDataset():
-        # load rawData into list
-        rawData = __loadRawData()
+        # delete remained files
+        print("Delete remained qrels splits and ranking datasets...")
+        for foldID in range(__foldNum):
+            curQrelsFile = "{}{}.txt".format(__qrelsFilePrefix, foldID)
+            curQrelsPath = os.path.join(dataDir, curQrelsFile)
+            if os.path.exists(curQrelsPath):
+                os.remove(curQrelsPath)
+            curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
+            curDataPath = os.path.join(dataDir, curDataFile)
+            if os.path.exists(curDataPath):
+                os.remove(curDataPath)
 
-        # generate positive samples for ranking learning
+        # load rawData into list
+        print("Load raw data and save qrels splits...")
+        rawData = __loadRawDataAndSaveQrels()
+
+        # generate feature vector of positive samples for ranking learning
         for i in range(__topicsNum):
             relevanceList0 = rawData[i][0]
             relevanceList1 = rawData[i][1]
@@ -116,34 +154,48 @@ def __loadDataset():
             if curFoldID == -1:
                 raise RuntimeError("Invalid fold id while processing rawData in rankingDataset.py!")
 
-            curSampleList = __rankingData[curFoldID][curIndexID]
+            print("Build ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            curDataList = __rankingData[curFoldID][curIndexID]
 
             # relevance 1 > relevance 0
             for largerDocID in relevanceList1:
                 for smallerDocID in relevanceList0:
-                    tempSample = (largerDocID, smallerDocID)
-                    curSampleList.append(tempSample)
+                    largerScoreList = getScoreList(curTopicID, largerDocID)
+                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    tempData = (largerScoreList, smallerScoreList)
+                    curDataList.append(tempData)
 
             # relevance 2 > relevance 1
             for largerDocID in relevanceList2:
                 for smallerDocID in relevanceList1:
-                    tempSample = (largerDocID, smallerDocID)
-                    curSampleList.append(tempSample)
+                    largerScoreList = getScoreList(curTopicID, largerDocID)
+                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    tempData = (largerScoreList, smallerScoreList)
+                    curDataList.append(tempData)
 
-        # save data dataset
-        __saveDataset()
+            # save data dataset
+            print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            __saveDataset(curFoldID, curIndexID)
     else:
         # load already saved ranking dataset
         for foldID in range(__foldNum):
+            print("Load existed dataset({}/{})...".format(foldID, __foldNum))
             curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
             curDataPath = os.path.join(dataDir, curDataFile)
             with open(curDataPath, 'r') as fp:
                 curLine = fp.readline()
                 while curLine:
+                    curLine.strip('\n')
+
                     curItems = curLine.split(' ')
                     curTopicID = int(curItems[0])
-                    curLargerDocID = curItems[1]
-                    curSmallerDocID = curItems[2]
+                    curLargerScoreList = curItems[1:19]
+                    curSmallerScoreList = curItems[19:]
+
+                    # string to float
+                    for i in range(len(curLargerScoreList)):
+                        curLargerScoreList[i] = float(curLargerScoreList[i])
+                        curSmallerScoreList[i] = float(curSmallerScoreList[i])
 
                     # get corresponding fold ID (0~4) and index ID (0~5)
                     curIndexID = __getIndexByTopic(foldID, curTopicID)
@@ -151,10 +203,11 @@ def __loadDataset():
                         raise RuntimeError("Invalid index ID while loading rankingData in rankingDataset.py!")
 
                     # append training sample into rankingData list
-                    __rankingData[foldID][curIndexID].append((curLargerDocID,curSmallerDocID))
+                    __rankingData[foldID][curIndexID].append([curLargerScoreList, curSmallerScoreList])
 
                     # get next line
                     curLine = fp.readline()
+    print("Success!")
 
 # modelID is in the range of 0~4
 # NOTE: dont't change the return list (readonly) otherwise you'll modify the rankingData!!!
@@ -196,6 +249,10 @@ def getTopicIDForTest(modelID, indexID):
 
     foldID = (modelID + 1) % __foldNum
     return __topicFolds[foldID][indexID]
+
+def getTopicIDsForTest(modelID):
+    foldID = (modelID + 1) % __foldNum
+    return __topicFolds[foldID]
 
 def getTopicIDForTrain(modelID, indexID):
     if modelID < 0 or modelID >= __foldNum:

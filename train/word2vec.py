@@ -10,7 +10,7 @@ curDir = os.path.dirname(os.path.abspath(__file__))
 docDir = os.path.join(os.path.dirname(curDir), "data/clinicaltrials_txt")
 
 modelDir = os.path.join(os.path.dirname(curDir), "models")
-modelFile = "doc2vec.model"
+__modelFile = "doc2vec.model"
 
 def __getAllDocPath(dirPath, pathList):
     for fname in os.listdir(dirPath):    
@@ -44,17 +44,21 @@ def __train():
     model.train(trainCorpus, total_examples=model.corpus_count, epochs=model.epochs)
 
     # save the Doc2Vec Model into model directory
-    modelPath = os.path.join(modelDir, modelFile)
+    modelPath = os.path.join(modelDir, __modelFile)
     model.save(modelPath)
 
     return model
 
 def __load():
-    modelPath = os.path.join(modelDir, modelFile)
+    modelPath = os.path.join(modelDir, __modelFile)
     if os.path.exists(modelPath):
+        print("Load the model of word2vec...")
         model = Doc2Vec.load(modelPath)
+        print("Success!")
     else:
+        print("Train the model of word2vec...")
         model = __train()
+        print("Success!")
     return model
 
 __model = __load()
@@ -69,6 +73,6 @@ def query(queryStr, topn):
 def getDocPath(docid):
     return __pathList[docid]
 
-print(len(__model.docvecs))
-sims = query("Just a test HIV HIV", 50)
-print(sims[0], getDocPath(sims[0][0]))
+# print(len(__model.docvecs))
+# sims = query("Just a test HIV HIV", 50)
+# print(sims[0], getDocPath(sims[0][0]))
