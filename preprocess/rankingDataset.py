@@ -250,6 +250,10 @@ def getTopicIDForTest(modelID, indexID):
     foldID = (modelID + 1) % __foldNum
     return __topicFolds[foldID][indexID]
 
+def getTopicIDsForTest(modelID):
+    foldID = (modelID + 1) % __foldNum
+    return __topicFolds[foldID]
+
 def getTopicIDForTrain(modelID, indexID):
     if modelID < 0 or modelID >= __foldNum:
         raise RuntimeError("Invalid modelID {}!".format(modelID))
