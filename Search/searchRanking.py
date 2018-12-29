@@ -112,7 +112,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
         with open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a') as f:
             r = 0
             for res in finalResult:
-                f.write(' '.join([str(topicId), "Q0", res[0], str(r), str(res[1]), "SZIR"]))
+                f.write(' '.join([str(topicId), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
                 r += 1
 
 for module in range(5):
