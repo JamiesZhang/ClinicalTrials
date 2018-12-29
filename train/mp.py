@@ -83,8 +83,10 @@ def __buildModel():
     reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
 
     # final layer: output layer
-    constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
-    outputTensor = tf.matmul(tf.reduce_sum(reduceSumTensor3, 2), constantTensor) # n*1
+    def matmul(tensor):
+        constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
+        return tf.matmul(tf.reduce_sum(tensor, 2), constantTensor)
+    outputTensor = tf.keras.layers.Lambda(matmul).forward(reduceSumTensor3) # n*1
 
     # build model
     model = tf.keras.Model(inputs=inputTensor, outputs=outputTensor)
