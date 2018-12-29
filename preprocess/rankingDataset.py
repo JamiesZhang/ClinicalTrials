@@ -3,12 +3,15 @@
 import os
 import math
 from Search.search import getScoreList
+from train.word2vec import similarity
+from preprocess.topics import getTopicByID
 
 curDir = os.path.dirname(__file__)
 dataDir = os.path.join(os.path.dirname(curDir), "data")
 
 __rawDataFile = "qrels-final-trials.txt"
 __rankingDataFilePrefix = "rankingDataset"
+__docSimilarityFilePrefix = "docSimilarity"
 __qrelsFilePrefix = "qrels"
 
 __topicsNum = 30
@@ -23,14 +26,21 @@ __topicFolds = [[28, 29, 25, 22, 6, 7],
                 [15, 20, 5, 10, 17, 2]]
 
 # rankingData list has 5 fold lists
-# each fold list 6 topic lists
+# each fold list has 6 topic lists
 # each topic list has a list of ranking learning positive samples
-# each sample is a tuple with specific format: (larger doc, smaller doc)
+# each sample is a tuple with specific format: (larger doc score list, smaller doc score list)
 __rankingData = []
 for i in range(__foldNum):
     __rankingData.append([])
     for j in range(__topicsNumPerFold):
         __rankingData[i].append([])
+
+# the format of docSimilarities is the same as rankingData
+__docSimilarities = []
+for i in range(__foldNum):
+    __docSimilarities.append([])
+    for j in range(__topicsNumPerFold):
+        __docSimilarities[i].append([])
 
 def __hasDataset():
     for foldID in range(__foldNum):
@@ -105,6 +115,18 @@ def __saveDataset(foldID, indexID):
             lineStr = ' '.join([str(curTopicID),largerScoreStr,smallerScoreStr]) + '\n'
             fp.write(lineStr)
 
+def __saveDocSimilarity(foldID, indexID):
+    curDataFile = "{}{}.txt".format(__docSimilarityFilePrefix, foldID)
+    curDataPath = os.path.join(dataDir, curDataFile)
+    with open(curDataPath, 'a') as fp:
+        curTopicID = __topicFolds[foldID][indexID]
+        curDocSimilarities = __docSimilarities[foldID][indexID]
+        for i in range(len(curDocSimilarities)):
+            largerDocSimilarity, smallerDocSimilarity = curDocSimilarities[i]
+            lineStr = ' '.join([str(curTopicID),str(largerDocSimilarity),str(smallerDocSimilarity)]) + '\n'
+            fp.write(lineStr)
+
+
 def __getIndexByTopic(foldID, topicID):
     curIndexID = -1
     for indexID in range(__topicsNumPerFold):
@@ -124,19 +146,83 @@ def __getFoldAndIndexByTopic(topicID):
             break
     return curFoldID, curIndexID
 
+def __deleteRemainedFiles():
+    for foldID in range(__foldNum):
+        curQrelsFile = "{}{}.txt".format(__qrelsFilePrefix, foldID)
+        curQrelsPath = os.path.join(dataDir, curQrelsFile)
+        if os.path.exists(curQrelsPath):
+            os.remove(curQrelsPath)
+        curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
+        curDataPath = os.path.join(dataDir, curDataFile)
+        if os.path.exists(curDataPath):
+            os.remove(curDataPath)
+        curSimilarityFile = "{}{}.txt".format(__docSimilarityFilePrefix, foldID)
+        curSimilarityPath = os.path.join(dataDir, curSimilarityFile)
+        if os.path.exists(curSimilarityPath):
+            os.remove(curSimilarityPath)
+
 def __loadDataset():
+    for foldID in range(__foldNum):
+        print("Load existed dataset({}/{})...".format(foldID, __foldNum))
+        curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
+        curDataPath = os.path.join(dataDir, curDataFile)
+        with open(curDataPath, 'r') as fp:
+            curLine = fp.readline()
+            while curLine:
+                curLine.strip('\n')
+
+                curItems = curLine.split(' ')
+                curTopicID = int(curItems[0])
+                curLargerScoreList = curItems[1:19]
+                curSmallerScoreList = curItems[19:]
+
+                # string to float
+                for i in range(len(curLargerScoreList)):
+                    curLargerScoreList[i] = float(curLargerScoreList[i])
+                    curSmallerScoreList[i] = float(curSmallerScoreList[i])
+
+                # get corresponding fold ID (0~4) and index ID (0~5)
+                curIndexID = __getIndexByTopic(foldID, curTopicID)
+                if curIndexID == -1:
+                    raise RuntimeError("Invalid index ID while loading rankingData in rankingDataset.py!")
+
+                # append training sample into rankingData list
+                __rankingData[foldID][curIndexID].append([curLargerScoreList, curSmallerScoreList])
+
+                # get next line
+                curLine = fp.readline()
+
+def __loadDocSimilarity():
+    for foldID in range(__foldNum):
+        print("Load existed doc similarities({}/{})...".format(foldID, __foldNum))
+        curDataFile = "{}{}.txt".format(__docSimilarityFilePrefix, foldID)
+        curDataPath = os.path.join(dataDir, curDataFile)
+        with open(curDataPath, 'r') as fp:
+            curLine = fp.readline()
+            while curLine:
+                curLine.strip('\n')
+
+                curItems = curLine.split(' ')
+                curTopicID = int(curItems[0])
+                curLargerDocSimilarity = float(curItems[1])
+                curSmallerDocSimilarity = float(curItems[2])
+
+                # get corresponding fold ID (0~4) and index ID (0~5)
+                curIndexID = __getIndexByTopic(foldID, curTopicID)
+                if curIndexID == -1:
+                    raise RuntimeError("Invalid index ID while loading rankingData in rankingDataset.py!")
+
+                # append training sample into rankingData list
+                __docSimilarities[foldID][curIndexID].append((curLargerDocSimilarity, curSmallerDocSimilarity))
+
+                # get next line
+                curLine = fp.readline()
+
+def __init():
     if not __hasDataset():
         # delete remained files
         print("Delete remained qrels splits and ranking datasets...")
-        for foldID in range(__foldNum):
-            curQrelsFile = "{}{}.txt".format(__qrelsFilePrefix, foldID)
-            curQrelsPath = os.path.join(dataDir, curQrelsFile)
-            if os.path.exists(curQrelsPath):
-                os.remove(curQrelsPath)
-            curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
-            curDataPath = os.path.join(dataDir, curDataFile)
-            if os.path.exists(curDataPath):
-                os.remove(curDataPath)
+        __deleteRemainedFiles()
 
         # load rawData into list
         print("Load raw data and save qrels splits...")
@@ -154,59 +240,52 @@ def __loadDataset():
             if curFoldID == -1:
                 raise RuntimeError("Invalid fold id while processing rawData in rankingDataset.py!")
 
-            print("Build ranking dataset({}/{})...".format(curTopicID, __topicsNum))
-            curDataList = __rankingData[curFoldID][curIndexID]
+            # print("Build ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            # curDataList = __rankingData[curFoldID][curIndexID]
+
+            print("Build doc similarities({}/{})...".format(curTopicID, __topicsNum))
+            curTopic = getTopicByID(curTopicID)
+            queryStr = ' '.join(curTopic.getDiseaseList())+' '.join(curTopic.getGeneList()+curTopic.getOther())
+            curDocSimilarities = __docSimilarities[curFoldID][curIndexID]
 
             # relevance 1 > relevance 0
             for largerDocID in relevanceList1:
                 for smallerDocID in relevanceList0:
-                    largerScoreList = getScoreList(curTopicID, largerDocID)
-                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    tempData = (largerScoreList, smallerScoreList)
-                    curDataList.append(tempData)
+                    # largerScoreList = getScoreList(curTopicID, largerDocID)
+                    # smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    # tempData = (largerScoreList, smallerScoreList)
+                    # curDataList.append(tempData)
+
+                    largerDocSimilarity = similarity(queryStr, largerDocID)
+                    smallerDocSimilarity = similarity(queryStr, smallerDocID)
+                    curDocSimilarities.append(largerDocSimilarity, smallerDocSimilarity)
 
             # relevance 2 > relevance 1
             for largerDocID in relevanceList2:
                 for smallerDocID in relevanceList1:
-                    largerScoreList = getScoreList(curTopicID, largerDocID)
-                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    tempData = (largerScoreList, smallerScoreList)
-                    curDataList.append(tempData)
+                    # largerScoreList = getScoreList(curTopicID, largerDocID)
+                    # smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    # tempData = (largerScoreList, smallerScoreList)
+                    # curDataList.append(tempData)
+
+                    largerDocSimilarity = similarity(queryStr, largerDocID)
+                    smallerDocSimilarity = similarity(queryStr, smallerDocID)
+                    curDocSimilarities.append(largerDocSimilarity, smallerDocSimilarity)
 
             # save data dataset
-            print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
-            __saveDataset(curFoldID, curIndexID)
+            # print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            # __saveDataset(curFoldID, curIndexID)
+
+            # save doc similarity
+            print("Save doc similarity({}/{})...".format(curTopicID, __topicsNum))
+            __saveDocSimilarity(curFoldID, curIndexID)
+
     else:
         # load already saved ranking dataset
-        for foldID in range(__foldNum):
-            print("Load existed dataset({}/{})...".format(foldID, __foldNum))
-            curDataFile = "{}{}.txt".format(__rankingDataFilePrefix, foldID)
-            curDataPath = os.path.join(dataDir, curDataFile)
-            with open(curDataPath, 'r') as fp:
-                curLine = fp.readline()
-                while curLine:
-                    curLine.strip('\n')
+        __loadDataset()
 
-                    curItems = curLine.split(' ')
-                    curTopicID = int(curItems[0])
-                    curLargerScoreList = curItems[1:19]
-                    curSmallerScoreList = curItems[19:]
-
-                    # string to float
-                    for i in range(len(curLargerScoreList)):
-                        curLargerScoreList[i] = float(curLargerScoreList[i])
-                        curSmallerScoreList[i] = float(curSmallerScoreList[i])
-
-                    # get corresponding fold ID (0~4) and index ID (0~5)
-                    curIndexID = __getIndexByTopic(foldID, curTopicID)
-                    if curIndexID == -1:
-                        raise RuntimeError("Invalid index ID while loading rankingData in rankingDataset.py!")
-
-                    # append training sample into rankingData list
-                    __rankingData[foldID][curIndexID].append([curLargerScoreList, curSmallerScoreList])
-
-                    # get next line
-                    curLine = fp.readline()
+        # load doc similarities
+        __loadDocSimilarity()
     print("Success!")
 
 # modelID is in the range of 0~4
@@ -226,11 +305,13 @@ def constructDatasetForModel(modelID):
     testDataset = __rankingData[testID] # 6 elements
 
     trainDataset = [] # 18 elements
+    similarities = [] # 18 elements
     for trainID in trainIDs:
         for indexID in range(__topicsNumPerFold):
             trainDataset.append(__rankingData[trainID][indexID])
+            similarities.append(__docSimilarities[trainID][indexID])
 
-    return validationDataset, testDataset, trainDataset
+    return validationDataset, testDataset, trainDataset, similarities
 
 def getTopicIDForValidation(modelID, indexID):
     if modelID < 0 or modelID >= __foldNum:
@@ -267,5 +348,5 @@ def getTopicIDForTrain(modelID, indexID):
 # Load ranking dataset to initialize rankingData
 # If it's the first time to run, we'll load raw data and convert into 5-fold ranking data and save them
 # Otherwise we just load already saved ranking data folds
-__loadDataset()
+__init()
 

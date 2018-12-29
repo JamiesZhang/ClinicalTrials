@@ -2,6 +2,8 @@
 
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
+from gensim.matutils import unitvec
+from numpy import dot
 
 import os
 import smart_open
@@ -23,13 +25,21 @@ def __getAllDocPath(dirPath, pathList):
 __pathList = []
 __getAllDocPath(docDir, __pathList)
 
+__docIDList = []
+for path in __pathList:
+    __docIDList.append(path.split(os.sep)[-1])
+
+__docIndexDict = {}
+for index in range(len(__docIDList)):
+    __docIndexDict[__docIDList[index]] = index
+
 def __readCorpus():
-    for i, fpath in enumerate(__pathList):
+    for index, fpath in enumerate(__pathList):
         with smart_open.smart_open(fpath, encoding="utf-8") as f:
             content = ""
             for line in f:
                 content = content + line
-            yield TaggedDocument(simple_preprocess(content), [i])
+            yield TaggedDocument(simple_preprocess(content), [index])
 
 def __train():
     # build train corpus
@@ -70,8 +80,24 @@ def query(queryStr, topn):
     # list of tuple (docid, similarity)
     return sims
 
-def getDocPath(docid):
-    return __pathList[docid]
+def similarity(queryStr, docID):
+    docIndex = getDocIndexes([docID])[0]
+    docVector = __model.docvecs[docIndex]
+    inferredVector = __model.infer_vector(simple_preprocess(queryStr))
+
+    return dot(unitvec(docVector), unitvec(inferredVector))
+
+def getDocIDs(docIndexes):
+    docIDs = []
+    for docIndex in docIndexes:
+        docIDs.append(__docIDList[docIndex])
+    return docIDs
+
+def getDocIndexes(docIDs):
+    docIndexes = []
+    for docID in docIDs:
+        docIndexes.append(__docIndexDict.get(docID))
+    return docIndexes
 
 # print(len(__model.docvecs))
 # sims = query("Just a test HIV HIV", 50)

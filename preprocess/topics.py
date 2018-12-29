@@ -158,4 +158,7 @@ def saveExtendedTopics(topics, saveFile=__extenedTopicsFile):
     with open(savePath, 'wb') as fp:
         fp.write(doc.toprettyxml(encoding='utf-8'))
 
+__topicList = loadRawTopics()
 
+def getTopicByID(topicID):
+    return __topicList[topicID-1]
