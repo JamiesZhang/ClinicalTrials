@@ -11,7 +11,7 @@ source ${activatePath}
 # startup elastic search
 # NOTE: use chmod to add access permission for any files in your elasticsearch install directory
 # NOTE: replace the following path with your own path of the executable file 'elasticsearch'
-if $(jps | grep Elasticsearch) == ""
+if [ $(jps | grep Elasticsearch | wc -l) == "" ];
 then
     echo "Start up elasticsearch..."
     bash /usr/local/elasticsearch-6.5.4/bin/elasticsearch &
@@ -22,7 +22,7 @@ fi
 
 # call entry.py
 echo "Call entry.py..."
-python $(curDirPath)"/entry.py"
+python ${curDirPath}"/entry.py"
 echo "Success"
 
 # evaluate IR
