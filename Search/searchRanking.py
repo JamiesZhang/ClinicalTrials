@@ -96,6 +96,9 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
     bm25Result = {}
     tfidfResult = {}
     finalResult = {}
+
+    f = open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a')
+    
     for topicId in topicList:
         topicId -= 1
         bm25Result =  getResultList(topicId, bm25Index, bm25TopicBoostList, bm25DocBoostList, bm25Boost)
@@ -109,11 +112,17 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
                 bm25Result.update({docId : finalScore})
         finalResult = bm25Result
         finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
-        with open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a') as f:
-            r = 0
-            for res in finalResult:
-                f.write(' '.join([str(topicId), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-                r += 1
+        
+        r = 0  # ranking number
+        for res in finalResult:
+            f.write(' '.join([str(topicId+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
+            r += 1
+        # with open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a') as f:
+        #     r = 0
+        #     for res in finalResult:
+        #         f.write(' '.join([str(topicId+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
+        #         r += 1
+    f.close()
 
 for module in range(5):
     docBoostList, topicBoostList, methodBoostList = mp.getWeights(module)
