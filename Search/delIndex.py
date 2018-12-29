@@ -10,7 +10,7 @@ else:
 
 print()
 
-if not es.indices.exists(index='clinicaltrials_bm25'):
+if not es.indices.exists(index='clinicaltrials_tfidf'):
     print("The index \"clinicaltrials_tfidf\" does not exist, you don't need delete it")
 else:
     es.indices.delete(index='clinicaltrials_tfidf')
