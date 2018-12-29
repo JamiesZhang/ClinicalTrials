@@ -6,9 +6,10 @@ import os
 curDir = os.path.dirname(__file__)
 parentDir = os.path.dirname(curDir)
 sys.path.append(parentDir)
-from preprocess import topics,docs
+from preprocess import topics,docs, rankingDataset
 from elasticsearch import Elasticsearch
 import requests
+from train import mp
 
 curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
 parentDir = os.path.dirname(curDir)
@@ -112,3 +113,8 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
             for res in finalResult:
                 f.write(topicId, "Q0", res[0], r, res[1], "SZIR")
                 r += 1
+
+for module in range(5):
+    docBoostList, topicBoostList, methodBoostList = mp.getWeights(module)
+    topicList = rankingDataset.getTopicIDsForTest(module)
+    resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList)
