@@ -97,6 +97,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
     tfidfResult = {}
     finalResult = {}
     for topicId in topicList:
+        topicId -= 1
         bm25Result =  getResultList(topicId, bm25Index, bm25TopicBoostList, bm25DocBoostList, bm25Boost)
         tfidfResult = getResultList(topicId, tfidfIndex, tfidfTopicBoostList, tfidfDocBoostList, tfidfBoost)
         for docId in tfidfResult.keys():
@@ -111,7 +112,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
         with open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'a') as f:
             r = 0
             for res in finalResult:
-                f.write(topicId, "Q0", res[0], r, res[1], "SZIR")
+                f.write(' '.join([str(topicId), "Q0", res[0], str(r), str(res[1]), "SZIR"]))
                 r += 1
 
 for module in range(5):
