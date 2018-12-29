@@ -73,6 +73,9 @@ class Topic(object):
     def setGeneList(self, geneList):
         self.gene = Topic.__join(geneList)
 
+    def toQueryStr(self):
+        return ' '.join(self.getDiseaseList())+' '.join(self.getGeneList())+self.getOther()
+
     def toJsonObj(self):
         '''
             Return the json object (python dict) of this topic instance which may be used in elasticsearch module.

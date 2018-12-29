@@ -4,7 +4,6 @@ import os
 import math
 from Search.search import getScoreList
 from train.word2vec import similarity
-from preprocess.topics import getTopicByID
 
 curDir = os.path.dirname(__file__)
 dataDir = os.path.join(os.path.dirname(curDir), "data")
@@ -19,11 +18,11 @@ __relevanceLevelNum = 3
 
 __foldNum = 5
 __topicsNumPerFold = 6
-__topicFolds = [[28, 29, 25, 22, 6, 7],
-                [26, 11, 1, 18, 21, 4],
-                [19, 24, 27, 30, 12, 23],
-                [13, 14, 3, 16, 8, 9],
-                [15, 20, 5, 10, 17, 2]]
+__topicFolds = ((28, 29, 25, 22, 6, 7),
+                (26, 11, 1, 18, 21, 4),
+                (19, 24, 27, 30, 12, 23),
+                (13, 14, 3, 16, 8, 9),
+                (15, 20, 5, 10, 17, 2))
 
 # rankingData list has 5 fold lists
 # each fold list has 6 topic lists
@@ -187,7 +186,7 @@ def __loadDataset():
                     raise RuntimeError("Invalid index ID while loading rankingData in rankingDataset.py!")
 
                 # append training sample into rankingData list
-                __rankingData[foldID][curIndexID].append([curLargerScoreList, curSmallerScoreList])
+                __rankingData[foldID][curIndexID].append((curLargerScoreList, curSmallerScoreList))
 
                 # get next line
                 curLine = fp.readline()
@@ -240,41 +239,39 @@ def __init():
             if curFoldID == -1:
                 raise RuntimeError("Invalid fold id while processing rawData in rankingDataset.py!")
 
-            # print("Build ranking dataset({}/{})...".format(curTopicID, __topicsNum))
-            # curDataList = __rankingData[curFoldID][curIndexID]
+            print("Build ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            curDataList = __rankingData[curFoldID][curIndexID]
 
             print("Build doc similarities({}/{})...".format(curTopicID, __topicsNum))
-            curTopic = getTopicByID(curTopicID)
-            queryStr = ' '.join(curTopic.getDiseaseList())+' '.join(curTopic.getGeneList())+curTopic.getOther()
             curDocSimilarities = __docSimilarities[curFoldID][curIndexID]
 
             # relevance 1 > relevance 0
             for largerDocID in relevanceList1:
                 for smallerDocID in relevanceList0:
-                    # largerScoreList = getScoreList(curTopicID, largerDocID)
-                    # smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    # tempData = (largerScoreList, smallerScoreList)
-                    # curDataList.append(tempData)
+                    largerScoreList = getScoreList(curTopicID, largerDocID)
+                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    tempData = (largerScoreList, smallerScoreList)
+                    curDataList.append(tempData)
 
-                    largerDocSimilarity = similarity(queryStr, largerDocID)
-                    smallerDocSimilarity = similarity(queryStr, smallerDocID)
+                    largerDocSimilarity = similarity(curTopicID, largerDocID)
+                    smallerDocSimilarity = similarity(curTopicID, smallerDocID)
                     curDocSimilarities.append((largerDocSimilarity, smallerDocSimilarity))
 
             # relevance 2 > relevance 1
             for largerDocID in relevanceList2:
                 for smallerDocID in relevanceList1:
-                    # largerScoreList = getScoreList(curTopicID, largerDocID)
-                    # smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    # tempData = (largerScoreList, smallerScoreList)
-                    # curDataList.append(tempData)
+                    largerScoreList = getScoreList(curTopicID, largerDocID)
+                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
+                    tempData = (largerScoreList, smallerScoreList)
+                    curDataList.append(tempData)
 
                     largerDocSimilarity = similarity(queryStr, largerDocID)
                     smallerDocSimilarity = similarity(queryStr, smallerDocID)
                     curDocSimilarities.append((largerDocSimilarity, smallerDocSimilarity))
 
             # save data dataset
-            # print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
-            # __saveDataset(curFoldID, curIndexID)
+            print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
+            __saveDataset(curFoldID, curIndexID)
 
             # save doc similarity
             print("Save doc similarity({}/{})...".format(curTopicID, __topicsNum))

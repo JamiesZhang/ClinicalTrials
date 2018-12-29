@@ -4,6 +4,7 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from gensim.matutils import unitvec
 from numpy import dot
+from preprocess.topics import getTopicByID
 
 import os
 import smart_open
@@ -81,7 +82,10 @@ def query(queryStr, topn):
     # list of tuple (docid, similarity)
     return sims
 
-def similarity(queryStr, docID):
+def similarity(topicID, docID):
+    curTopic = getTopicByID(topicID)
+    queryStr = curTopic.toQueryStr()
+
     docIndex = getDocIndexes([docID])[0]
     docVector = __model.docvecs[docIndex]
     inferredVector = __model.infer_vector(simple_preprocess(queryStr))
