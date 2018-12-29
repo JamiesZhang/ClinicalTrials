@@ -63,42 +63,41 @@ class RankingWeightedSumLayer(tf.keras.layers.Layer):
         return cls(**config)
 
 def __buildModel():
-    with tf.Graph().as_default():
-        # compute dimensions
-        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 18
-        topicLayerDim = __searchModelNum * __topicFieldNum # 6
-        searchLayerDim = __searchModelNum # 2
+    # compute dimensions
+    docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 18
+    topicLayerDim = __searchModelNum * __topicFieldNum # 6
+    searchLayerDim = __searchModelNum # 2
 
-        # layer 0: input layer
-        inputTensorX = tf.placeholder(shape=(-1, 2, docLayerDim), name=__inputTensorXName) # n*2*18
-        inputTensorY = tf.placeholder(shape=(-1, 1), name=__inputTensorYName) # n*1
+    # layer 0: input layer
+    inputTensorX = tf.placeholder(shape=(-1, 2, docLayerDim), name=__inputTensorXName) # n*2*18
+    inputTensorY = tf.placeholder(shape=(-1, 1), name=__inputTensorYName) # n*1
 
-        # layer 1: doc-field layer
-        docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName) # 18
-        dotTensor1 = inputTensorX * docVariableTensor # n*2*18
-        reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
-        reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
+    # layer 1: doc-field layer
+    docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName) # 18
+    dotTensor1 = inputTensorX * docVariableTensor # n*2*18
+    reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
+    reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
 
-        # layer 2: topic-field layer
-        topicVariableTensor = tf.Variable(np.random.randn(topicLayerDim), name=__topicVariableTensorName) # 6
-        dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
-        reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
-        reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
+    # layer 2: topic-field layer
+    topicVariableTensor = tf.Variable(np.random.randn(topicLayerDim), name=__topicVariableTensorName) # 6
+    dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
+    reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
+    reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
 
-        # layer 3: search-field layer
-        searchVariableTensor = tf.Variable(np.random.randn(searchLayerDim), name=__searchVariableTensorName) # 2
-        dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
-        reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
-        reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
+    # layer 3: search-field layer
+    searchVariableTensor = tf.Variable(np.random.randn(searchLayerDim), name=__searchVariableTensorName) # 2
+    dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
+    reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
+    reduceSumTensor3 = tf.reduce_sum(reshapeTensor3, 3)  # n*2*1
 
-        # final layer: output layer
-        constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
-        outputTensor = tf.matmul(tf.reduce_sum(reduceSumTensor3, 2), constantTensor) # n*1
+    # final layer: output layer
+    constantTensor = tf.constant([[1.], [-1.]])  # larger first, smaller second
+    outputTensor = tf.matmul(tf.reduce_sum(reduceSumTensor3, 2), constantTensor) # n*1
 
-        # set optimizer and loss function
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputTensor, labels=inputTensorY))
-        optimizer = tf.train.AdamOptimizer(1e-4)
-        min_operation = optimizer.minimize(loss, name=__finalTensorName)
+    # set optimizer and loss function
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=outputTensor, labels=inputTensorY))
+    optimizer = tf.train.AdamOptimizer(1e-4)
+    min_operation = optimizer.minimize(loss, name=__finalTensorName)
 
     return min_operation
 
@@ -125,7 +124,7 @@ def __hasModels():
 __models = [None] * rankingDataset.__foldNum
 
 if not __hasModels():
-    with tf.Session().as_default() as sess:
+    with tf.get_default_session() as sess:
         saver = tf.train.Saver()
         for modelID in range(rankingDataset.__foldNum):
             __models[modelID] = __buildModel()
