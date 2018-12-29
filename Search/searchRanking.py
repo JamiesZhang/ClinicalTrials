@@ -9,7 +9,7 @@ sys.path.append(parentDir)
 from preprocess import topics,docs, rankingDataset
 from elasticsearch import Elasticsearch
 import requests
-from train import mp
+from train import mp, word2vec
 import math
 
 curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
@@ -72,7 +72,7 @@ def queryBody(queryTopicId, topicBoostList, docBoostList):
 
 # return a dict, can get id in "_id", and get score in "_score"
 def mySearch(index, topicId, topicBoostList, docBoostList):
-    result = es.search(index = index, doc_type='trial', body=queryBody(topicId, topicBoostList, docBoostList), size=50)['hits']['hits']
+    result = es.search(index = index, doc_type='trial', body=queryBody(topicId, topicBoostList, docBoostList), size=500)['hits']['hits']
     return result
 
 # for a query topicId, get all result :{docID：sorce}
@@ -100,7 +100,6 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
     f = open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'w')
     
     for topicId in topicList:
-        s = 
         finalResult = {}
         topicID = topicId
         topicID -= 1
@@ -111,6 +110,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
                 finalScore = bm25Result[docId] + tfidfResult[docId]
             else:
                 finalScore = tfidfResult[docId]
+            s = word2vec.similarity(topicID, docId)
             finalScore = finalScore*math.log(1+t*s)
             bm25Result.update({docId : finalScore})
         finalResult = bm25Result
@@ -123,8 +123,11 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
     f.close()
 
 for module in range(5):
-    docBoostList, topicBoostList, methodBoostList = mp.getWeights(module)
+    weight = mp.getWeights(module)
+    docBoostList = weight[0]
+    topicBoostList = weight[1]
+    methodBoostList = weight[2]
+    t = weight[3]
     topicList = rankingDataset.getTopicIDsForTest(module)
-    resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList)
+    resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList, t)
     print('finish module {}'.format(module))
-
