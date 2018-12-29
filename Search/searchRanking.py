@@ -118,3 +118,4 @@ for module in range(5):
     docBoostList, topicBoostList, methodBoostList = mp.getWeights(module)
     topicList = rankingDataset.getTopicIDsForTest(module)
     resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList)
+    print('finish module {}'.format(module))
