@@ -27,7 +27,8 @@ __getAllDocPath(docDir, __pathList)
 
 __docIDList = []
 for path in __pathList:
-    __docIDList.append(path.split(os.sep)[-1])
+    docID = path.split(os.sep)[-1].split('.')[0]
+    __docIDList.append(docID)
 
 __docIndexDict = {}
 for index in range(len(__docIDList)):

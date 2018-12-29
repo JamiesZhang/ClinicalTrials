@@ -245,7 +245,7 @@ def __init():
 
             print("Build doc similarities({}/{})...".format(curTopicID, __topicsNum))
             curTopic = getTopicByID(curTopicID)
-            queryStr = ' '.join(curTopic.getDiseaseList())+' '.join(curTopic.getGeneList()+curTopic.getOther())
+            queryStr = ' '.join(curTopic.getDiseaseList())+' '.join(curTopic.getGeneList())+curTopic.getOther()
             curDocSimilarities = __docSimilarities[curFoldID][curIndexID]
 
             # relevance 1 > relevance 0
@@ -258,7 +258,7 @@ def __init():
 
                     largerDocSimilarity = similarity(queryStr, largerDocID)
                     smallerDocSimilarity = similarity(queryStr, smallerDocID)
-                    curDocSimilarities.append(largerDocSimilarity, smallerDocSimilarity)
+                    curDocSimilarities.append((largerDocSimilarity, smallerDocSimilarity))
 
             # relevance 2 > relevance 1
             for largerDocID in relevanceList2:
@@ -270,7 +270,7 @@ def __init():
 
                     largerDocSimilarity = similarity(queryStr, largerDocID)
                     smallerDocSimilarity = similarity(queryStr, smallerDocID)
-                    curDocSimilarities.append(largerDocSimilarity, smallerDocSimilarity)
+                    curDocSimilarities.append((largerDocSimilarity, smallerDocSimilarity))
 
             # save data dataset
             # print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
