@@ -176,4 +176,4 @@ if (not es.indices.exists(index="clinicaltrials_bm25")) and (not es.indices.exis
         i = i + 1
     print('Creat index successful!')
 else:
-    print("The index is already exists!!!")
+    print("Load elastic search index successfully!")

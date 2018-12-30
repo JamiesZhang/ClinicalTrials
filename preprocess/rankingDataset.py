@@ -173,8 +173,8 @@ def __loadDataset():
 
                 curItems = curLine.split(' ')
                 curTopicID = int(curItems[0])
-                curLargerScoreList = curItems[1:19]
-                curSmallerScoreList = curItems[19:]
+                curLargerScoreList = curItems[1:37]
+                curSmallerScoreList = curItems[37:]
 
                 # string to float
                 for i in range(len(curLargerScoreList)):
@@ -357,3 +357,15 @@ def getTopicIDForTrain(modelID, indexID):
 # Otherwise we just load already saved ranking data folds
 __init()
 
+priorDocVar = [-3.65598700e-01, 5.23019371e-01, -1.96089676e-01, -1.19840460e+00,
+               4.05433431e-01,  9.63046533e-04, -2.53796863e-02,  1.28983606e+00,
+              -5.97619525e-01,  2.31328407e-01, -1.37372671e-01,  2.25801543e-02,
+               7.40965643e-01, -1.23850558e+00,  9.75304122e-01, -5.52182780e-01,
+              -2.14590693e-01, -8.95768105e-01,  4.62239380e-01, -2.60697874e+00,
+               1.46319160e+00,  5.85609824e-01,  4.76923897e-01,  7.51840005e-01,
+              -1.09200927e-01, -1.84218154e+00, -2.60135057e-01,  2.01593949e-02,
+               2.67977845e-01,  6.04063492e-03, -5.98253113e-01, -8.89481979e-01,
+              -2.32680635e+00,  8.74454667e-01,  2.08087043e+00,  1.79280194e+00] 
+priorTopicVar = [-1.28456078, -0.08988733,  0.49912862,  0.26319672,  0.82445743, -0.59275104]
+priorSearchVar = [-0.18857061, -0.80293699]
+priorSimVar = [0.49202645]

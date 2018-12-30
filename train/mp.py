@@ -29,10 +29,20 @@ __finalTensorName = "train"
 __accuracyTensorName = "tensor"
 
 __batchSize = 32
-__epochNum = 3
+__epochNum = 1
 
 graph = tf.Graph()
 sess = tf.Session(graph=graph)
+
+#docVariableInitValue = np.random.randn(36)
+#topicVariableInitValue = np.random.randn(6)
+#searchVariableInitValue = np.random.randn(2)
+#similarityVariableInitValue = np.random.randn(1)
+
+docVariableInitValue = np.array(rankingDataset.priorDocVar, dtype = np.float64)
+topicVariableInitValue = np.array(rankingDataset.priorTopicVar, dtype=np.float64)
+searchVariableInitValue = np.array(rankingDataset.priorSearchVar, dtype=np.float64)
+similarityVariableInitValue = np.array(rankingDataset.priorSimVar, dtype=np.float64)
 
 def __buildModel(modelID):
     
@@ -48,32 +58,32 @@ def __buildModel(modelID):
         inputTensorS = tf.placeholder(shape=(__batchSize, 2), name=__inputTensorWName+str(modelID), dtype=tf.float64) # n*2
 
         # layer 1: doc-field layer
-        docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName+str(modelID)) # 36
+        docVariableTensor = tf.Variable(docVariableInitValue, name=__docVariableTensorName+str(modelID)) # 36
         dotTensor1 = inputTensorX * docVariableTensor # n*2*18
         reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
         reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
         # reluTensor1 = tf.nn.relu(reduceSumTensor1) # n*2*6
 
         # layer 2: topic-field layer
-        topicVariableTensor = tf.Variable(np.random.randn(topicLayerDim), name=__topicVariableTensorName+str(modelID)) # 6
+        topicVariableTensor = tf.Variable(topicVariableInitValue, name=__topicVariableTensorName+str(modelID)) # 6
         dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
         reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
         reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
         # reluTensor2 = tf.nn.relu(reduceSumTensor2) # n*2*2
 
         # layer 3: search-field layer
-        searchVariableTensor = tf.Variable(np.random.randn(searchLayerDim), name=__searchVariableTensorName+str(modelID)) # 2
+        searchVariableTensor = tf.Variable(searchVariableInitValue, name=__searchVariableTensorName+str(modelID)) # 2
         dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
         reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
         reduceSumTensor3 = tf.nn.sigmoid(tf.reduce_sum(tf.reduce_sum(reshapeTensor3, 3), 2)) # n*2
         # reluTensor3 = tf.nn.relu(reduceSumTensor3) # n*2
 
         # layer 4: word2vec layer
-        word2vecVariableTensor = tf.Variable(np.random.randn(1), name=__word2vecVariableTensorName+str(modelID)) # 1
+        word2vecVariableTensor = tf.Variable(similarityVariableInitValue, name=__word2vecVariableTensorName+str(modelID)) # 1
         reluTensor = tf.nn.relu(word2vecVariableTensor * inputTensorS) # n*2
         dotTensor = reduceSumTensor3 * tf.log(tf.constant(math.e, dtype=tf.float64) + reluTensor) # n*2
 
-        # dotTensor = reduceSumTensor3 * tf.nn.sigmoid(reluTensor)  # n*2
+        #dotTensor = reduceSumTensor3 * tf.nn.sigmoid(reluTensor)  # n*2
 
         # final layer: output layer
         constantTensor = tf.constant([[1.], [-1.]], dtype=tf.float64)  # larger first, smaller second
@@ -128,6 +138,20 @@ def __hasModels():
             return False
     return True
 
+def getWeights(modelID):
+    docVariableTensor = graph.get_tensor_by_name(__docVariableTensorName+str(modelID)+":0")
+    topicVariableTensor = graph.get_tensor_by_name(__topicVariableTensorName+str(modelID)+":0")
+    searchVariableTensor = graph.get_tensor_by_name(__searchVariableTensorName+str(modelID)+":0")
+    word2vecVariableTensor = graph.get_tensor_by_name(__word2vecVariableTensorName + str(modelID) + ":0")
+
+    docVariable = sess.run(docVariableTensor)
+    topicVariable = sess.run(topicVariableTensor)
+    searchVariable = sess.run(searchVariableTensor)
+    word2vecVariable = sess.run(word2vecVariableTensor)
+    #print(docVariable, topicVariable, searchVariable, word2vecVariable)
+    return (docVariable, topicVariable, searchVariable, word2vecVariable)
+    #return (np.array([1.]*36), np.array([1.]*6), np.array([1.]*2), np.array([1.]))
+
 __models = [None] * rankingDataset.__foldNum
 
 if not __hasModels():
@@ -136,7 +160,7 @@ if not __hasModels():
         _, testset, similarityTestset, trainset, similarityTrainset = rankingDataset.constructDatasetForModel(modelID)
 
         # load dataset and similarities for train
-        dataset = [] # 18*n*2*18 -> n*2*18
+        dataset = [] # 18*n*2*36 -> n*2*36
         similarityset = [] # 18*n*2 -> n*2
         for indexID in range(len(trainset)):
             # topicID = rankingDataset.getTopicIDForTrain(modelID, indexID)
@@ -196,26 +220,4 @@ else:
 
             # load variable values of existed models
             __models[modelID] = saver.restore(sess, curModelPath)
-
-def getWeights(modelID):
-    docVariableTensor = graph.get_tensor_by_name(__docVariableTensorName+str(modelID)+":0")
-    topicVariableTensor = graph.get_tensor_by_name(__topicVariableTensorName+str(modelID)+":0")
-    searchVariableTensor = graph.get_tensor_by_name(__searchVariableTensorName+str(modelID)+":0")
-    word2vecVariableTensor = graph.get_tensor_by_name(__word2vecVariableTensorName + str(modelID) + ":0")
-
-    docVariable = sess.run(docVariableTensor)
-    topicVariable = sess.run(topicVariableTensor)
-    searchVariable = sess.run(searchVariableTensor)
-    word2vecVariable = sess.run(word2vecVariableTensor)
-    print(docVariable, topicVariable, searchVariable, word2vecVariable)
-    #return (docVariable, topicVariable, searchVariable, word2vecVariable)
-    return (np.array([1.]*36), np.array([1.]*6), np.array([1.]*2), np.array([1.]))
-
-for i in range(5):
-    getWeights(i)
-
-
-
-
-
 
