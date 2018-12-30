@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/ssy/projects/ClinicalTrials/models/MP1/MP1.model"
+all_model_checkpoint_paths: "/home/ssy/projects/ClinicalTrials/models/MP1/MP1.model"

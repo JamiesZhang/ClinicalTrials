@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+curDirPath=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+
+# change path of python virtual env
+echo "Deactivate virtual environment of python..."
+deactivate
+echo "Success"
+
+# close elasticsearch
+kill -9 $(jps | grep Elasticsearch | awk '{print $1}')
+echo "Success"

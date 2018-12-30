@@ -4,11 +4,11 @@ import xml.dom.minidom
 import json
 import os
 
-curDir = os.path.dirname(__file__)
+curDir = os.path.dirname(os.path.abspath(__file__))
 dataDir = os.path.join(os.path.dirname(curDir), "data")
 
-rawTopicsFile = "topics2017.xml"
-extenedTopicsFile = "extendedTopics.xml"
+__rawTopicsFile = "topics2017.xml"
+__extenedTopicsFile = "extendedTopics.xml"
 
 sep = ','
 
@@ -25,7 +25,7 @@ class Topic(object):
         '''
         keysNum = len(kwargs.keys())
         if keysNum!=1 and keysNum!=5:
-            raise RuntimeError("Wrong parameters while creating Topic instance! Keys num is {}.".format(keysNum))
+            raise RuntimeError("Invalid parameters while creating Topic instance! Keys num is {}.".format(keysNum))
 
         if 'jsonStr' in kwargs.keys():
             jsonObj = json.loads(kwargs['jsonStr'])
@@ -49,24 +49,39 @@ class Topic(object):
     def __split(wordStr):
         return wordStr.split(sep)
 
+    def getNumber(self):
+        return self.number
+        
     def getDiseaseList(self):
         return Topic.__split(self.disease)
 
     def getGeneList(self):
         return Topic.__split(self.gene)
+    
+    def getAge(self):
+        return self.demographic.split(' ')[0].split('-')[0]
+    
+    def getGender(self):
+        return self.demographic.split(' ')[1]
 
+    def getOther(self):
+        return self.other
+        
     def setDiseaseList(self, diseaseList):
         self.disease = Topic.__join(diseaseList)
 
     def setGeneList(self, geneList):
         self.gene = Topic.__join(geneList)
 
+    def toQueryStr(self):
+        return ' '.join(self.getDiseaseList())+' '.join(self.getGeneList())+self.getOther()
+
     def toJsonObj(self):
         '''
             Return the json object (python dict) of this topic instance which may be used in elasticsearch module.
         '''
-        jsonObj = {'number':self.number, 'disease':self.disease, 'gene':self.gene,
-                   'demographic':self.demographic, 'other':self.other}
+        jsonObj = { "number" : self.number, "disease" : self.disease, "gene" : self.gene, 
+                    "demographic" : self.demographic, "other" :self.other}
         return jsonObj
 
     def toJsonStr(self):
@@ -78,18 +93,17 @@ class Topic(object):
         return jsonStr
 
 # Load topics2017.xml by default including 30 Topic instances
-def loadTopics(loadFile=rawTopicsFile):
+def loadTopics(loadFile=__rawTopicsFile):
     # Read topics.xml
     loadPath = os.path.join(dataDir, loadFile)
     DOMTree = xml.dom.minidom.parse(loadPath)
     rootNode = DOMTree.documentElement
     if rootNode.tagName != "topics":
-        raise RuntimeError("Wrong format of topics.xml! Tagname of root node is {}.".format(rootNode.tagName))
+        raise RuntimeError("Invalid format of topics.xml! Tagname of root node is {}.".format(rootNode.tagName))
 
     # Get all of topic nodes
     topicNodes = rootNode.getElementsByTagName(name = "topic")
     topics = [None]*len(topicNodes) # List of Topic instances
-    print(len(topics))
     for topicNode in topicNodes:
         number = int(topicNode.getAttribute("number"))
         disease = str(topicNode.getElementsByTagName("disease")[0].firstChild.nodeValue)
@@ -100,13 +114,17 @@ def loadTopics(loadFile=rawTopicsFile):
     return topics
 
 def loadRawTopics():
-    return loadTopics(rawTopicsFile)
+    return loadTopics(__rawTopicsFile)
 
 def loadExtendedTopics():
-    return loadTopics(extenedTopicsFile)
+    return loadTopics(__extenedTopicsFile)
+
+def hasExtendedTopics():
+    extendedPath = os.path.join(dataDir, __extenedTopicsFile)
+    return os.path.exists(extendedPath)
 
 # Save topics after synonymous extended
-def saveExtendedTopics(topics, saveFile=extenedTopicsFile):
+def saveExtendedTopics(topics, saveFile=__extenedTopicsFile):
     savePath = os.path.join(dataDir, saveFile)
     if os.path.exists(savePath):
         os.remove(savePath)
@@ -143,14 +161,7 @@ def saveExtendedTopics(topics, saveFile=extenedTopicsFile):
     with open(savePath, 'wb') as fp:
         fp.write(doc.toprettyxml(encoding='utf-8'))
 
-topics = loadRawTopics()
-print(topics[0].getDiseaseList())
-diseaseList = topics[0].getDiseaseList()
-diseaseList.append("HIV")
-topics[0].setDiseaseList(diseaseList)
-saveExtendedTopics(topics)
+__topicList = loadRawTopics()
 
-newTopics = loadExtendedTopics()
-print(newTopics[0].getDiseaseList())
-
-
+def getTopicByID(topicID):
+    return __topicList[topicID-1]

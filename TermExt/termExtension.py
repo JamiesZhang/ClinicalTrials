@@ -2,9 +2,12 @@ import requests
 from pprint import pprint
 import re
 from lxml import etree
+import os
 
-topic_path = 'topics2017.xml'
-ex_topic_path = '../ext_topics.xml'
+curDir = os.path.dirname(__file__)
+dataDir = os.path.join(os.path.dirname(curDir),'data')
+__extenedTopicsFile = os.path.join(dataDir, 'extendedTopics.xml')
+__rawTopicsFile = os.path.join(dataDir, 'topics2017.xml')
 
 base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
 fetch_url = '{}esearch.fcgi?db={}&term={}'
@@ -81,13 +84,13 @@ def find_all_relavant_genes(gene):
     return all_genes
 
 # extract term in topic
-topic_xml = etree.parse(topic_path, etree.XMLParser())
+topic_xml = etree.parse(__rawTopicsFile, etree.XMLParser())
 diseases = topic_xml.xpath('//disease/text()')
 genes = topic_xml.xpath('//gene/text()')
 demographic = topic_xml.xpath('//demographic/text()')
 other = topic_xml.xpath('//other/text()')
 
-ex_topics = open(ex_topic_path,'a')
+ex_topics = open(__extenedTopicsFile,'a')
 for i in range(len(diseases)):
     ex_topics.write("<topic_number=\"{}\">\n".format(i+1))
     relevant_disease = find_all_relavant_diseases(diseases[i])
