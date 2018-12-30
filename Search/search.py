@@ -224,7 +224,7 @@ def getSubScoreDict(module, topicId, docId):
 
     for i in range(len(resDict)):
         if docId in resDict[i].keys():
-            sList.append(resDict[docId])
+            sList.append(resDict[i][docId])
         else:
             if i < 6:
                 tNumber = 0
