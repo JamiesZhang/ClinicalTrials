@@ -147,7 +147,6 @@ es = Elasticsearch([{'host':'localhost', 'port' : 9200}])
 def initIndex(indexName, Module):
     if es.indices.exists(index=indexName):
         print("The index is already exists!!!")
-        exit()
     else:
         es.indices.create(index=indexName, body=Body(Module))
 
@@ -160,18 +159,21 @@ req = requests.get(r'http://localhost:9200')
 if req.status_code != 200:
     raise RuntimeError('connection failure')
 
-# init the index
-initIndex("clinicaltrials_bm25",Body("BM25"))
-initIndex("clinicaltrials_tfidf",Body("default"))
+if (not es.indices.exists(index="clinicaltrials_bm25")) and (not es.indices.exists(index="clinicaltrials_tfidf")):
+    # init the index
+    initIndex("clinicaltrials_bm25",Body("BM25"))
+    initIndex("clinicaltrials_tfidf",Body("default"))
 
-# convert each document to json object
-dir0 = os.listdir(docDir)     #000 001 002...
-i = 1
-for d in dir0:
-    path0 = os.path.join(docDir, d)       # C:\Users\61759\Desktop\ClinicalTrials\data\clinicaltrials_xml\000
-    dir1 = os.listdir(path0)
-    bulk(es, gendata("clinicaltrials_bm25", path0, dir1))
-    bulk(es, gendata("clinicaltrials_tfidf", path0, dir1))
-    print('finish doc in dir {}, ({}/32)'.format(d,i))
-    i = i + 1
-print('Creat index successful!')
+    # convert each document to json object
+    dir0 = os.listdir(docDir)     #000 001 002...
+    i = 1
+    for d in dir0:
+        path0 = os.path.join(docDir, d)       # C:\Users\61759\Desktop\ClinicalTrials\data\clinicaltrials_xml\000
+        dir1 = os.listdir(path0)
+        bulk(es, gendata("clinicaltrials_bm25", path0, dir1))
+        bulk(es, gendata("clinicaltrials_tfidf", path0, dir1))
+        print('finish doc in dir {}, ({}/32)'.format(d,i))
+        i = i + 1
+    print('Creat index successful!')
+else:
+    print("The index is already exists!!!")
