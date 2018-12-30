@@ -10,7 +10,7 @@ from preprocess import topics,docs, rankingDataset
 from elasticsearch import Elasticsearch
 import requests
 from train import mp, word2vec
-import math
+import math, numpy
 
 curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
 parentDir = os.path.dirname(curDir)
@@ -25,6 +25,62 @@ if requests.get(r'http://localhost:9200').status_code != 200:
 bm25Index = "clinicaltrials_bm25"
 tfidfIndex = "clinicaltrials_tfidf"
 rawtopics = topics.loadRawTopics()
+
+def baseBody(queryTopicId):
+    disease = ','.join(rawtopics[queryTopicId].getDiseaseList())
+    gene = ','.join(rawtopics[queryTopicId].getGeneList())
+    other = rawtopics[queryTopicId].getOther()
+    bBody = {
+            "query" : {
+                "bool" : {
+                    "should" : [
+                        {
+                            "multi_match" : {
+                                "query" : disease,
+                                "fields" : ["brief_title^2", 
+                                            "official_title", 
+                                            "textblock", "mesh_term", "condition", "keyword"],
+                                "tie_breaker" : 0.3,
+                                "boost" : 2
+                            }
+                        },
+                        {
+                            "multi_match" : {
+                            "query" : gene,
+                            "fields" : ["brief_title^2", 
+                                            "official_title", 
+                                            "textblock", "mesh_term", "condition", "keyword"],
+                            "tie_breaker" : 0.3,
+                            "boost" : 1.5
+                            }
+                        },
+                        {
+                                "multi_match" : {
+                                "query" : other,
+                                "fields" : ["brief_title^2", 
+                                            "official_title", 
+                                            "textblock", "mesh_term", "condition", "keyword"],
+                                "tie_breaker" : 0.3,
+                                "boost" : 1
+                            }
+                        }
+                    ]
+                    # "should" : [
+                    #     {
+                    #         "term" : {
+                    #             "textblock" : disease
+                    #         }
+                    #     },
+                    #     {
+                    #          "term" : {
+                    #             "keyword" : disease
+                    #         }
+                    #     }
+                    # ]
+                }
+            }
+        }
+    return bBody
 
 def queryBody(queryTopicId, topicBoostList, docBoostList):
     disease = ','.join(rawtopics[queryTopicId].getDiseaseList())
@@ -72,7 +128,7 @@ def queryBody(queryTopicId, topicBoostList, docBoostList):
 
 # return a dict, can get id in "_id", and get score in "_score"
 def mySearch(index, topicId, topicBoostList, docBoostList):
-    result = es.search(index = index, doc_type='trial', body=queryBody(topicId, topicBoostList, docBoostList), size=500)['hits']['hits']
+    result = es.search(index = index, doc_type='trial', body=baseBody(topicId), size=500)['hits']['hits']
     return result
 
 # for a query topicId, get all result :{docID：sorce}
@@ -83,6 +139,22 @@ def getResultList(topicId, method, topicBoostList, docBoostList, methodBoost):
         res = {hit["_id"] : hit["_score"]*methodBoost}
         resDic.update(res)
     return resDic
+
+def getBaseResultList(topicId, whichIndex):
+    resDic = []
+    Results = es.search(index = whichIndex, doc_type='trial', body=baseBody(topicId), size=500)['hits']['hits']
+    for hit in Results:
+        res = [hit["_id"] , hit["_score"]]
+        resDic.append(res)
+    return resDic
+
+def relu(num):
+    n = 0
+    if num < 0:
+        n = 0
+    else:
+        n = num
+    return n
 
 def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostList, t):
     bm25Boost = methodBoostList[0]
@@ -111,7 +183,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
             else:
                 finalScore = tfidfResult[docId]
             s = word2vec.similarity(topicID, docId)
-            finalScore = finalScore*math.log(1+t*s)
+            finalScore = finalScore*math.log(3 + relu(t*s))
             bm25Result.update({docId : finalScore})
         finalResult = bm25Result
         finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
@@ -122,6 +194,29 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
             r += 1
     f.close()
 
+
+def baseResultToFile(moduleId, topicList):
+    bm25Result = []
+    tfidfResult = []
+    bm25File = open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w')
+    tfidfFile = open(os.path.join(dataDir, 'baseResTfidf{}.txt'.format(moduleId)),'w')
+    for topicId in topicList:
+        topicID = topicId
+        topicID -= 1
+        bm25Result =  getBaseResultList(topicID, bm25Index)
+        tfidfResult = getBaseResultList(topicID, tfidfIndex)
+        r1 = 0
+        for res in bm25Result:
+            bm25File.write(' '.join([str(topicID+1), "Q0", res[0], str(r1), str(res[1]), "SZIR"]) + '\n')
+            r1 += 1
+        
+        r2 = 0
+        for res in tfidfResult:
+            tfidfFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r2), str(res[1]), "SZIR"]) + '\n')
+            r2 += 1
+    bm25File.close()
+    tfidfFile.close()
+
 for module in range(5):
     weight = mp.getWeights(module)
     docBoostList = weight[0]
@@ -130,4 +225,5 @@ for module in range(5):
     t = weight[3]
     topicList = rankingDataset.getTopicIDsForTest(module)
     resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList, t)
+    baseResultToFile(module,topicList)
     print('finish module {}'.format(module))
