@@ -219,38 +219,38 @@ def baseResultToFile(moduleId, topicList):
         topicID -= 1
         bm25_result =  getBaseResultList(topicID, bm25Index)
         tfidf_result = getBaseResultList(topicID, tfidfIndex)
-        bm25Result = {}
-        tfidfResult = {}
+        # bm25Result = {}
+        # tfidfResult = {}
 
-        for r in bm25_result:
-            bm25Result.update({r[0]:r[1]})
+        # for r in bm25_result:
+        #     bm25Result.update({r[0]:r[1]})
 
-        for rr in tfidf_result:
-            tfidfResult.update({rr[0]:rr[1]})
+        # for rr in tfidf_result:
+        #     tfidfResult.update({rr[0]:rr[1]})
 
-        for docId in tfidfResult.keys():
-            if docId in bm25Result.keys():
-                finalScore = bm25Result[docId] + tfidfResult[docId]
-            else:
-                finalScore = tfidfResult[docId]
-            s = word2vec.similarity(topicID, docId)
-            finalScore = finalScore*math.log(math.e + relu(t*s))
-            bm25Result.update({docId : finalScore})
-        finalResult = bm25Result
-        finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
-        r = 0  # ranking number
-        for res in finalResult:
-            baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-            returnResult.append([topicID+1, {res[0]:res[1]}])
-            r += 1
+        # for docId in tfidfResult.keys():
+        #     if docId in bm25Result.keys():
+        #         finalScore = bm25Result[docId] + tfidfResult[docId]
+        #     else:
+        #         finalScore = tfidfResult[docId]
+        #     # s = word2vec.similarity(topicID, docId)
+        #     # finalScore = finalScore*math.log(math.e + relu(t*s))
+        #     bm25Result.update({docId : finalScore})
+        # finalResult = bm25Result
+        # finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
+        # r = 0  # ranking number
+        # for res in finalResult:
+        #     baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
+        #     returnResult.append([topicID+1, {res[0]:res[1]}])
+        #     r += 1
 
         r1 = 0
-        for res in bm25Result:
+        for res in bm25_result:
             bm25File.write(' '.join([str(topicID+1), "Q0", res[0], str(r1), str(res[1]), "SZIR"]) + '\n')
             r1 += 1
         
         r2 = 0
-        for res in tfidfResult:
+        for res in tfidf_result:
             tfidfFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r2), str(res[1]), "SZIR"]) + '\n')
             r2 += 1
     bm25File.close()
