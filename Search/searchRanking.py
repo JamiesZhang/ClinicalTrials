@@ -251,9 +251,9 @@ def getFinalResult(moduleId, topicList, res1, res2, p):
             finalResult = res1Value
             finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
             x = 0  # ranking number
-            for res in finalResult:
-                finalFile.write(' '.join([str(j), "Q0", res[0], str(x), str(res[1]), "SZIR"]) + '\n')
-                x += 1
+        for res in finalResult:
+            finalFile.write(' '.join([str(j), "Q0", res[0], str(x), str(res[1]), "SZIR"]) + '\n')
+            x += 1
     finalFile.close()
 
 for module in range(5):
