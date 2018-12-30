@@ -238,7 +238,7 @@ def getSubScoreDict(module, topicID, docIdList):
                     tNumber = 2
                 s = getScore(whichIndex=module, docId=docId, queryBody=queryOnXXX(topicFieldList[tNumber],docFieldList[i % 6]))
                 sList.append(s)
-        subDict.update({docId, sList})
+        subDict.update({docId : sList})
     return subDict
 
 def getScoreDict(topicId, docIdList):
