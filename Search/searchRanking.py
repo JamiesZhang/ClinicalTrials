@@ -53,16 +53,6 @@ def baseBody(queryTopicId):
                             "tie_breaker" : 0.3,
                             # "boost" : 1.5
                             }
-                        },
-                        {
-                                "multi_match" : {
-                                "query" : other,
-                                "fields" : ["brief_title^2", 
-                                            "official_title", 
-                                            "textblock", "mesh_term", "condition", "keyword"],
-                                "tie_breaker" : 0.3,
-                                # "boost" : 1
-                            }
                         }
                     ],
                     "should" : [
@@ -114,19 +104,6 @@ def queryBody(queryTopicId, topicBoostList, docBoostList):
                                         "keyword"+"^"+str(docBoostList[11])],
                             # "tie_breaker" : 0.3,
                             "boost" : topicBoostList[1]
-                        }
-                    },
-                    {
-                            "multi_match" : {
-                            "query" : other,
-                            "fields" : ["brief_title"+"^"+str(docBoostList[12]), 
-                                        "official_title"+"^"+str(docBoostList[13]), 
-                                        "textblock"+"^"+str(docBoostList[14]),
-                                        "mesh_term"+"^"+str(docBoostList[15]),
-                                        "condition"+"^"+str(docBoostList[16]),
-                                        "keyword"+"^"+str(docBoostList[17])],
-                            # "tie_breaker" : 0.3,
-                            "boost" : topicBoostList[2]
                         }
                     }
                 ]
@@ -219,30 +196,30 @@ def baseResultToFile(moduleId, topicList):
         topicID -= 1
         bm25_result =  getBaseResultList(topicID, bm25Index)
         tfidf_result = getBaseResultList(topicID, tfidfIndex)
-        # bm25Result = {}
-        # tfidfResult = {}
+        bm25Result = {}
+        tfidfResult = {}
 
-        # for r in bm25_result:
-        #     bm25Result.update({r[0]:r[1]})
+        for r in bm25_result:
+            bm25Result.update({r[0]:r[1]})
 
-        # for rr in tfidf_result:
-        #     tfidfResult.update({rr[0]:rr[1]})
+        for rr in tfidf_result:
+            tfidfResult.update({rr[0]:rr[1]})
 
-        # for docId in tfidfResult.keys():
-        #     if docId in bm25Result.keys():
-        #         finalScore = bm25Result[docId] + tfidfResult[docId]
-        #     else:
-        #         finalScore = tfidfResult[docId]
-        #     # s = word2vec.similarity(topicID, docId)
-        #     # finalScore = finalScore*math.log(math.e + relu(t*s))
-        #     bm25Result.update({docId : finalScore})
-        # finalResult = bm25Result
-        # finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
-        # r = 0  # ranking number
-        # for res in finalResult:
-        #     baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-        #     returnResult.append([topicID+1, {res[0]:res[1]}])
-        #     r += 1
+        for docId in tfidfResult.keys():
+            if docId in bm25Result.keys():
+                finalScore = bm25Result[docId] + tfidfResult[docId]
+            else:
+                finalScore = tfidfResult[docId]
+            # s = word2vec.similarity(topicID, docId)
+            # finalScore = finalScore*math.log(math.e + relu(t*s))
+            bm25Result.update({docId : finalScore})
+        finalResult = bm25Result
+        finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
+        r = 0  # ranking number
+        for res in finalResult:
+            baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
+            returnResult.append([topicID+1, {res[0]:res[1]}])
+            r += 1
 
         r1 = 0
         for res in bm25_result:

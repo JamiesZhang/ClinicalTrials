@@ -183,15 +183,6 @@ def subScoreList(queryTopicId, docId, whichIndex):
     sList.append(getScore(whichIndex, docId, queryOnMesh_term(gene)))
     sList.append(getScore(whichIndex, docId, queryOnCondition(gene)))
     sList.append(getScore(whichIndex, docId, queryOnKeyword(gene)))
-
-    # for other
-    sList.append(getScore(whichIndex, docId, queryOnBrief_title(other)))
-    sList.append(getScore(whichIndex, docId, queryOnOfficial_title(other)))
-    sList.append(getScore(whichIndex, docId, queryOnTextblock(other)))
-    sList.append(getScore(whichIndex, docId, queryOnMesh_term(other)))
-    sList.append(getScore(whichIndex, docId, queryOnCondition(other)))
-    sList.append(getScore(whichIndex, docId, queryOnKeyword(other)))
-
     return sList
 
 # return a list for traning
@@ -207,20 +198,17 @@ def getSubScoreDict(module, topicID, docIdList):
     topicId = topicID - 1
     disease = ','.join(rawtopics[topicId].getDiseaseList())
     gene = ','.join(rawtopics[topicId].getGeneList())
-    other = rawtopics[topicId].getOther()
     
     docFieldList = ["brief_title", "official_title", "textblock", "mesh_term", "condition", "keyword"]
-    topicFieldList = [disease, gene, other]
+    topicFieldList = [disease, gene]
 
     resDict = []
 
-    for i in range(18):
+    for i in range(12):
         if i < 6:
             n = 0
-        elif i < 12:
-            n = 1
         else:
-            n = 2
+            n = 1
         resDict.append(getResScore(whichIndex=module, queryBody=queryOnXXX(topicFieldList[n],docFieldList[i % 6])))
 
 
@@ -232,10 +220,8 @@ def getSubScoreDict(module, topicID, docIdList):
             else:
                 if i < 6:
                     tNumber = 0
-                elif i < 12:
-                    tNumber = 1
                 else:
-                    tNumber = 2
+                    tNumber = 1
                 s = getScore(whichIndex=module, docId=docId, queryBody=queryOnXXX(topicFieldList[tNumber],docFieldList[i % 6]))
                 sList.append(s)
         subDict.update({docId: sList})
@@ -278,10 +264,3 @@ def getScoreDict(topicId, docIdList):
     # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
     # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(gene)))
 
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(other)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(other)))
-    
