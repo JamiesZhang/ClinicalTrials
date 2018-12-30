@@ -95,6 +95,18 @@ def Body(simModule):
                     },
                     "healthy_volunteers" : {
                         "type" : "string"
+                    },
+                    "textblock" : {
+                        "type" : "string"
+                    },
+                    "mesh_term" : {
+                        "type" : "string"
+                    },
+                    "condition" : {
+                        "type" : "string"
+                    },
+                    "keyword" : {
+                        "type" : "string"
                     }
                 }
             }
@@ -114,6 +126,7 @@ def gendata(indexName, path, dir):
             yield {
                 "_index": indexName,
                 "_type": "trial",
+                "_id" : str(rawDoc.getDocId()),
                 "doc": jsonDoc,
             }
 # def gendata(indexName, absPath, allFile):
@@ -153,11 +166,12 @@ initIndex("clinicaltrials_tfidf",Body("default"))
 
 # convert each document to json object
 dir0 = os.listdir(docDir)     #000 001 002...
+i = 1
 for d in dir0:
     path0 = os.path.join(docDir, d)       # C:\Users\61759\Desktop\ClinicalTrials\data\clinicaltrials_xml\000
     dir1 = os.listdir(path0)
     bulk(es, gendata("clinicaltrials_bm25", path0, dir1))
     bulk(es, gendata("clinicaltrials_tfidf", path0, dir1))
-    print('finish dir {}'.format(d))
+    print('finish doc in dir {}, {}/32'.format(d,i))
+    i = i + 1
 print('Creat index successful!')
-

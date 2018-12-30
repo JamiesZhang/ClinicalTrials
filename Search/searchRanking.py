@@ -10,7 +10,7 @@ from preprocess import topics,docs, rankingDataset
 from elasticsearch import Elasticsearch
 import requests
 from train import mp, word2vec
-import math
+import math, numpy
 
 curDir = os.path.dirname(os.path.abspath(__file__)) #this way, right
 parentDir = os.path.dirname(curDir)
@@ -64,19 +64,19 @@ def baseBody(queryTopicId):
                                 "boost" : 1
                             }
                         }
-                    ],
-                    "should" : [
-                        {
-                            "term" : {
-                                "textblock" : disease
-                            }
-                        },
-                        {
-                             "term" : {
-                                "keyword" : disease
-                            }
-                        }
                     ]
+                    # "should" : [
+                    #     {
+                    #         "term" : {
+                    #             "textblock" : disease
+                    #         }
+                    #     },
+                    #     {
+                    #          "term" : {
+                    #             "keyword" : disease
+                    #         }
+                    #     }
+                    # ]
                 }
             }
         }
@@ -148,6 +148,14 @@ def getBaseResultList(topicId, whichIndex):
         resDic.append(res)
     return resDic
 
+def relu(num):
+    n = 0
+    if num < 0:
+        n = 0
+    else:
+        n = num
+    return n
+
 def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostList, t):
     bm25Boost = methodBoostList[0]
     tfidfBoost = methodBoostList[1]
@@ -175,7 +183,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
             else:
                 finalScore = tfidfResult[docId]
             s = word2vec.similarity(topicID, docId)
-            finalScore = finalScore*math.log(1+t*s)
+            finalScore = finalScore*math.log(3 + relu(t*s))
             bm25Result.update({docId : finalScore})
         finalResult = bm25Result
         finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
@@ -195,7 +203,7 @@ def baseResultToFile(moduleId, topicList):
         topicID -= 1
         bm25Result =  getBaseResultList(topicID, bm25Index)
         tfidfResult = getBaseResultList(topicID, tfidfIndex)
-        
+        print(bm25Result)
         r1 = 0
         for res in bm25Result:
             with open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w') as bm25File:
