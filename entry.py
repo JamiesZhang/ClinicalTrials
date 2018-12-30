@@ -2,5 +2,7 @@
 
 from preprocess import docs, topics, rankingDataset
 from train import word2vec, mp
-#from Search import bulkCreatIndex, delIndex, search, searchRanking
-#from TermExt import termExtension
+from Search import bulkCreatIndex, search, searchRanking
+from TermExt import termExtension
+
+#searchRanking.xxx

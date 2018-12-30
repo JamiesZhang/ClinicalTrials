@@ -5,19 +5,27 @@ curDirPath=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 # change path of python virtual env
 #echo "Activate virtual environment of python..."
 #activatePath=${curDirPath}"/clinicalenv/bin/activate"
-#echo "Success"
 #source ${activatePath}
+#echo "Success"
 
 # startup elastic search
 # NOTE: use chmod to add access permission for any files in your elasticsearch install directory
 # NOTE: replace the following path with your own path of the executable file 'elasticsearch'
 if [ $(jps | grep Elasticsearch | wc -l) == "0" ];
 then
-    echo "Start up elasticsearch..."
+    echo "Try to start up elasticsearch..."
     # bash /usr/local/elasticsearch-6.5.4/bin/elasticsearch &
     # echo "Success"
+
+    #while $(jps | grep Elasticsearch | wc -l) == "0"
+    #do
+    #    echo "Wait for elasticsearch..."
+    #    sleep 1s
+    #done
+
+#echo "Elasticsearch start up successfully!"
 else
-    echo "Elasticsearch has been launched"
+    echo "Elasticsearch has been started!"
 fi
 
 # call entry.py

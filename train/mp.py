@@ -213,8 +213,8 @@ def getWeights(modelID):
     searchVariable = sess.run(searchVariableTensor)
     word2vecVariable = sess.run(word2vecVariableTensor)
     print(docVariable, topicVariable, searchVariable, word2vecVariable)
-    return (docVariable, topicVariable, searchVariable, word2vecVariable)
-    #return (np.array([1.]*18), np.array([1.]*6), np.array([1.]*2), np.array([1.]))
+    #return (docVariable, topicVariable, searchVariable, word2vecVariable)
+    return (np.array([1.]*36), np.array([1.]*6), np.array([1.]*2), np.array([1.]))
 
 for i in range(5):
     getWeights(i)
