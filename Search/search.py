@@ -237,30 +237,3 @@ def getScoreDict(topicId, docIdList):
         d1.extend(dict2[k])
         resDict.update({k: d1})
     return resDict
-
-
-
-
-
-# def test(topicid, docID):
-#     disease = ','.join(rawtopics[topicid].getDiseaseList())
-#     # print(getRes("clinicaltrials_bm25", queryOnTextblock(disease))["_score"])
-#     print(getScore("clinicaltrials_bm25", docID, queryOnTextblock(disease)))
-# # 'NCT00002575', '_score': 9.86981
-# # 'NCT00003648', '_score': 9.649702,
-# test(1, "NCT00003648")
-
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(disease)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(disease)))
-
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(gene)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
-    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(gene)))
-

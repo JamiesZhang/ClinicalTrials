@@ -187,38 +187,18 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
 def baseResultToFile(moduleId, topicList):
     returnResult = {}
     bm25_result = []
-    # tfidf_result = []
+
     bm25File = open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w')
-    # tfidfFile = open(os.path.join(dataDir, 'baseResTfidf{}.txt'.format(moduleId)),'w')
-    # baseFile = open(os.path.join(dataDir, 'baseRes{}.txt'.format(moduleId)),'w')
+
     for topicId in topicList:
         topicID = topicId
         topicID -= 1
         bm25_result =  getBaseResultList(topicID, bm25Index)
-        # tfidf_result = getBaseResultList(topicID, tfidfIndex)
+
         bm25Result = {}
-        # tfidfResult = {}
 
         for r in bm25_result:
             bm25Result.update({r[0]:r[1]})
-
-        # for rr in tfidf_result:
-        #     tfidfResult.update({rr[0]:rr[1]})
-
-        # # for docId in tfidfResult.keys():
-        #     if docId in bm25Result.keys():
-        #         finalScore = bm25Result[docId] + tfidfResult[docId]
-        #     else:
-        #         finalScore = tfidfResult[docId]
-        #     # s = word2vec.similarity(topicID, docId)
-        #     # finalScore = finalScore*math.log(math.e + relu(t*s))
-        #     bm25Result.update({docId : finalScore})
-        # finalResult = bm25Result
-        # finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
-        # r = 0  # ranking number
-        # for res in finalResult:
-        #     baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-        #     r += 1
         
         returnResult.update({topicID+1 : bm25Result})
 
@@ -227,13 +207,7 @@ def baseResultToFile(moduleId, topicList):
             bm25File.write(' '.join([str(topicID+1), "Q0", res[0], str(r1), str(res[1]), "SZIR"]) + '\n')
             r1 += 1
         
-        # r2 = 0
-        # for res in tfidf_result:
-        #     tfidfFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r2), str(res[1]), "SZIR"]) + '\n')
-        #     r2 += 1
     bm25File.close()
-    # tfidfFile.close()
-    # baseFile.close()
     return returnResult
     
 def getFinalResult(moduleId, topicList, res1, res2, p):
@@ -265,7 +239,7 @@ for module in range(5):
     topicList = rankingDataset.getTopicIDsForTest(module)
     resT = resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList, t)
     rBase = baseResultToFile(module,topicList)
-    p = 0.1        # 一个需要手调的参数，衡量,p代表我们模型的权重
+    p = 0.6        
     getFinalResult(module, topicList, resT, rBase, p)
     print('finish module {}'.format(module))
 
