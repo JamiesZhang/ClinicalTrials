@@ -158,7 +158,7 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
     bm25Result = {}
     tfidfResult = {}
 
-    returnResult = []
+    returnResult = {}
     f = open(os.path.join(dataDir, 'res{}.txt'.format(moduleId)),'w')
     for topicId in topicList:
         finalResult = {}
@@ -175,17 +175,17 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
             finalScore = sigmoid(finalScore)*math.log(3 + relu(t*s))
             bm25Result.update({docId : finalScore})
         finalResult = bm25Result
-        finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
+        finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score, 排完顺后就不再是dict类型了
         r = 0  # ranking number
         for res in finalResult:
             f.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-            returnResult.append([topicID+1, {res[0]:res[1]}])
             r += 1
+        returnResult.update({topicID+1 : bm25Result})
     f.close()
     return returnResult
 
 def baseResultToFile(moduleId, topicList):
-    returnResult = []
+    returnResult = {}
     bm25_result = []
     tfidf_result = []
     bm25File = open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w')
@@ -218,8 +218,9 @@ def baseResultToFile(moduleId, topicList):
         r = 0  # ranking number
         for res in finalResult:
             baseFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r), str(res[1]), "SZIR"]) + '\n')
-            returnResult.append([topicID+1, {res[0]:res[1]}])
             r += 1
+        
+        returnResult.update({topicID+1 : bm25Result})
 
         r1 = 0
         for res in bm25_result:
@@ -235,29 +236,26 @@ def baseResultToFile(moduleId, topicList):
     baseFile.close()
     return returnResult
     
-#def getFinalResult(moduleId, res1, res2, p):
+def getFinalResult(moduleId, topicList, res1, res2, p):
+    fRes = {}
+    finalFile = open(os.path.join(dataDir, 'FinalScore{}.txt'.format(moduleId)),'w')
 
-#    fRes = {}
-#    finalFile = open(os.path.join(dataDir, 'FinalScore{}.txt'.format(moduleId)),'w')
-#    for i in range(30):
-#        j = i+1
-#        for r1, r2 in res1, res2:
-#            if r1[0] == j and r2[0] == j:
-#                for docId in r2[1].keys():
-#                    if docId in r1[1].keys():
-#                        finalScore = p*r1[1][docId] + (1-p)*r2[1][docId]
-#                    else:
-#                        finalScore = r2[1][docId]
-#                    fRes.update({docId : finalScore})
-#                    finalResult = fRes
-#                    finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
-#                    x = 0  # ranking number
-#                    for res in finalResult:
-#                        finalFile.write(' '.join([str(j), "Q0", res[0], str(x), str(res[1]), "SZIR"]) + '\n')
-#                        x += 1
-#            else:
-#                break
-#    finalFile.close()
+    for j in topicList:
+        res1Value = res1[j]
+        res2Value = res2[j]
+        for docId in res2Value.keys():
+            if docId in res1Value.keys():
+                finalScore = p*res1Value[docId] + (1-p)*res2Value[docId]
+            else:
+                finalScore = res1Value[docId]
+            fRes.update({docId : finalScore})
+            finalResult = fRes
+            finalResult= sorted(finalResult.items(), key=lambda d:d[1], reverse = True)   # sort by score
+            x = 0  # ranking number
+            for res in finalResult:
+                finalFile.write(' '.join([str(j), "Q0", res[0], str(x), str(res[1]), "SZIR"]) + '\n')
+                x += 1
+    finalFile.close()
 
 for module in range(5):
     weight = mp.getWeights(module)
@@ -268,7 +266,7 @@ for module in range(5):
     topicList = rankingDataset.getTopicIDsForTest(module)
     resT = resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList, t)
     rBase = baseResultToFile(module,topicList)
-    p = 0.5        # 一个需要手调的参数，衡量
-    #getFinalResult(module, resT, rBase, p)
+    p = 0.1        # 一个需要手调的参数，衡量,p代表我们模型的权重
+    getFinalResult(module, topicList, resT, rBase, p)
     print('finish module {}'.format(module))
 
