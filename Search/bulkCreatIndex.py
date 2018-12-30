@@ -10,6 +10,7 @@ from preprocess import topics,docs
 import json
 import pprint
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 import requests
 
 dataDir = os.path.join(parentDir, 'data')
@@ -100,18 +101,46 @@ def Body(simModule):
         }
     }
     return initIndexBody
+
+# high bulk
+def gendata(indexName, path, dir):
+    for dir3 in dir:
+        dir4 = os.path.join(path, dir3)  #C:\Users\61759\Desktop\ClinicalTrials\data\clinicaltrials_xml\001\00100
+        fileNames = os.listdir(dir4)
+        for fileName in fileNames:
+            filePath = os.path.join(dir4,fileName)
+            rawDoc = docs.loadDoc(filePath)
+            jsonDoc = rawDoc.toJsonObj()
+            yield {
+                "_index": indexName,
+                "_type": "trial",
+                "doc": jsonDoc,
+            }
+# def gendata(indexName, absPath, allFile):
+#     for File in allFile:
+#         filePath = os.path.join(absPath,File)
+#         rawDoc = docs.loadDoc(filePath)
+#         jsonDoc = rawDoc.toJsonObj()
+#         yield {
+#             "_index": indexName,
+#             "_type": "trial",
+#             "doc": jsonDoc,
+#         }
+
+
 # connect to es ser ver
 es = Elasticsearch([{'host':'localhost', 'port' : 9200}])
 
 def initIndex(indexName, Module):
     if es.indices.exists(index=indexName):
         print("The index is already exists!!!")
+        exit()
     else:
         es.indices.create(index=indexName, body=Body(Module))
 
 # add document to index, and set doc's is in index
-def addIndex(indexName, id, docBody):
-    es.index(index=indexName, doc_type='trial', id=id, body=docBody)
+def addIndex(client, indexName, absPath, allFile):
+    bulk(client, gendata(indexName, absPath, allFile))
 
 # test connection
 req = requests.get(r'http://localhost:9200')
@@ -124,21 +153,11 @@ initIndex("clinicaltrials_tfidf",Body("default"))
 
 # convert each document to json object
 dir0 = os.listdir(docDir)     #000 001 002...
-for i in range(len(dir0)):
-    path0 = os.path.join(docDir, dir0[i])       # clinicaltrials_xml/000
-    dir1 = os.listdir(path0)                    # 00000,00001,00002...
-    for j in range(len(dir1)):
-        path1 = os.path.join(path0, dir1[j])    # clinicaltrials_xml/000/00000
-        fileName = os.listdir(path1)            # NCT00000102.xml
-        for k in range(len(fileName)):
-            filePath = os.path.join(path1,fileName[k])
-            rawDoc = docs.loadDoc(filePath)
-            jsonDoc = rawDoc.toJsonObj()
-            docId = rawDoc.getDocId()
-            try:
-                addIndex("clinicaltrials_bm25", docId, jsonDoc)         # add document to index
-                addIndex("clinicaltrials_tfidf", docId, jsonDoc)
-            except Exception as e:
-                print(e)
-        print('finish dir {}'.format(dir1[j]))
+for d in dir0:
+    path0 = os.path.join(docDir, d)       # C:\Users\61759\Desktop\ClinicalTrials\data\clinicaltrials_xml\000
+    dir1 = os.listdir(path0)
+    bulk(es, gendata("clinicaltrials_bm25", path0, dir1))
+    bulk(es, gendata("clinicaltrials_tfidf", path0, dir1))
+    print('finish dir {}'.format(d))
 print('Creat index successful!')
+
