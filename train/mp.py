@@ -65,20 +65,15 @@ def __buildModel(modelID):
         searchVariableTensor = tf.Variable(np.random.randn(searchLayerDim), name=__searchVariableTensorName+str(modelID)) # 2
         dotTensor3 = reduceSumTensor2 * searchVariableTensor  # n*2*2
         reshapeTensor3 = tf.reshape(dotTensor3, shape=(-1, 2, 1, __searchModelNum))  # n*2*1*2
-        reduceSumTensor3 = tf.reduce_sum(tf.reduce_sum(reshapeTensor3, 3), 2) # n*2
+        reduceSumTensor3 = tf.nn.sigmoid(tf.reduce_sum(tf.reduce_sum(reshapeTensor3, 3), 2)) # n*2
         # reluTensor3 = tf.nn.relu(reduceSumTensor3) # n*2
 
         # layer 4: word2vec layer
         word2vecVariableTensor = tf.Variable(np.random.randn(1), name=__word2vecVariableTensorName+str(modelID)) # 1
-
         reluTensor = tf.nn.relu(word2vecVariableTensor * inputTensorS) # n*2
-        logTensor = tf.sign(reduceSumTensor3) * tf.log(tf.constant(3., dtype=tf.float64) + reluTensor) # n*2
+        dotTensor = reduceSumTensor3 * tf.log(tf.constant(math.e, dtype=tf.float64) + reluTensor) # n*2
 
-        #sigmoidTensor = tf.nn.sigmoid(word2vecVariableTensor * inputTensorS) # n*2
-        #powTensor = tf.sign(reduceSumTensor3) * tf.pow(sigmoidTensor, tf.constant(math.e, dtype=tf.float64)) # n*2
-
-        dotTensor = logTensor * reduceSumTensor3
-        # reluTensor4 = tf.nn.relu(logTensor) # n*2
+        # dotTensor = reduceSumTensor3 * tf.nn.sigmoid(reluTensor)  # n*2
 
         # final layer: output layer
         constantTensor = tf.constant([[1.], [-1.]], dtype=tf.float64)  # larger first, smaller second
