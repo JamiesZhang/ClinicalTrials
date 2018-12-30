@@ -208,30 +208,20 @@ def getSubScoreDict(module, topicId, docId):
     other = rawtopics[topicId].getOther()
     
     docFieldList = ["brief_title", "official_title", "textblock", "mesh_term", "condition", "keyword"]
-    topicFieldList = ["disease", "gene", "other"]
+    topicFieldList = [disease, gene, other]
 
     resDict = []
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(disease)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(disease)))
 
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(gene)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(gene)))
+    for i in range(18):
+        if i < 6:
+            n = 0
+        elif i < 12:
+            n = 1
+        else:
+            n = 2
+        resDict.append(getResScore(whichIndex=module, queryBody=queryOnXXX(topicFieldList[n],docFieldList[i % 6])))
 
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(other)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
-    resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(other)))
-    
+
     for i in range(len(resDict)):
         if docId in resDict[i].keys():
             sList.append(resDict[docId])
@@ -256,6 +246,9 @@ def getScoreDict(topicId, docIdList):
         resDict.update({docId:list1})
     return resDict
 
+
+
+
 # def test(topicid, docID):
 #     disease = ','.join(rawtopics[topicid].getDiseaseList())
 #     # print(getRes("clinicaltrials_bm25", queryOnTextblock(disease))["_score"])
@@ -263,3 +256,25 @@ def getScoreDict(topicId, docIdList):
 # # 'NCT00002575', '_score': 9.86981
 # # 'NCT00003648', '_score': 9.649702,
 # test(1, "NCT00003648")
+
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(disease)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(disease)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(disease)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(disease)))
+
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(gene)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(gene)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(gene)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(gene)))
+
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnBrief_title(other)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnMesh_term(other)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnOfficial_title(other)))
+    # resDict.append(getResScore(whichIndex=module, queryBody=queryOnCondition(other)))
+    
