@@ -127,7 +127,7 @@ def gendata(indexName, path, dir):
                 "_index": indexName,
                 "_type": "trial",
                 "_id" : str(rawDoc.getDocId()),
-                "doc": jsonDoc,
+                "_source": jsonDoc,
             }
 # def gendata(indexName, absPath, allFile):
 #     for File in allFile:
@@ -172,6 +172,6 @@ for d in dir0:
     dir1 = os.listdir(path0)
     bulk(es, gendata("clinicaltrials_bm25", path0, dir1))
     bulk(es, gendata("clinicaltrials_tfidf", path0, dir1))
-    print('finish doc in dir {}, {}/32'.format(d,i))
+    print('finish doc in dir {}, ({}/32)'.format(d,i))
     i = i + 1
 print('Creat index successful!')

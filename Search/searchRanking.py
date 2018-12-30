@@ -45,13 +45,13 @@ def baseBody(queryTopicId):
                             }
                         },
                         {
-                                "multi_match" : {
-                                "query" : gene,
-                                "fields" : ["brief_title^2", 
+                            "multi_match" : {
+                            "query" : gene,
+                            "fields" : ["brief_title^2", 
                                             "official_title", 
                                             "textblock", "mesh_term", "condition", "keyword"],
-                                "tie_breaker" : 0.3,
-                                "boost" : 1.5
+                            "tie_breaker" : 0.3,
+                            "boost" : 1.5
                             }
                         },
                         {
@@ -198,23 +198,24 @@ def resultToFile(moduleId, topicList, methodBoostList, topicBoostList, docBoostL
 def baseResultToFile(moduleId, topicList):
     bm25Result = []
     tfidfResult = []
+    bm25File = open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w')
+    tfidfFile = open(os.path.join(dataDir, 'baseResTfidf{}.txt'.format(moduleId)),'w')
     for topicId in topicList:
         topicID = topicId
         topicID -= 1
         bm25Result =  getBaseResultList(topicID, bm25Index)
         tfidfResult = getBaseResultList(topicID, tfidfIndex)
-        print(bm25Result)
         r1 = 0
         for res in bm25Result:
-            with open(os.path.join(dataDir, 'baseResBM25{}.txt'.format(moduleId)),'w') as bm25File:
-                bm25File.write(' '.join([str(topicID+1), "Q0", res[0], str(r1), str(res[1]), "SZIR"]) + '\n')
-                r1 += 1
+            bm25File.write(' '.join([str(topicID+1), "Q0", res[0], str(r1), str(res[1]), "SZIR"]) + '\n')
+            r1 += 1
         
         r2 = 0
         for res in tfidfResult:
-            with open(os.path.join(dataDir, 'baseResTfidf{}.txt'.format(moduleId)),'w') as tfidfFile:
-                tfidfFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r2), str(res[1]), "SZIR"]) + '\n')
-                r2 += 1
+            tfidfFile.write(' '.join([str(topicID+1), "Q0", res[0], str(r2), str(res[1]), "SZIR"]) + '\n')
+            r2 += 1
+    bm25File.close()
+    tfidfFile.close()
 
 for module in range(5):
     weight = mp.getWeights(module)
@@ -226,5 +227,3 @@ for module in range(5):
     resultToFile(module, topicList, methodBoostList, topicBoostList, docBoostList, t)
     baseResultToFile(module,topicList)
     print('finish module {}'.format(module))
-
-
