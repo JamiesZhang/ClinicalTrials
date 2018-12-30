@@ -10,6 +10,7 @@ import json
 import pprint
 from elasticsearch import Elasticsearch
 import requests
+import copy
 
 dataDir = os.path.join(parentDir, 'data')
 docDir = os.path.join(dataDir, 'clinicaltrials_xml')
@@ -201,8 +202,9 @@ def getScoreList(queryTopicId, docId):
     List.extend(list2)
     return List
 
-def getSubScoreDict(module, topicId, docId):
-    sList = []
+def getSubScoreDict(module, topicID, docIdList):
+    subDict = {}
+    topicId = topicID - 1
     disease = ','.join(rawtopics[topicId].getDiseaseList())
     gene = ','.join(rawtopics[topicId].getGeneList())
     other = rawtopics[topicId].getOther()
@@ -222,29 +224,34 @@ def getSubScoreDict(module, topicId, docId):
         resDict.append(getResScore(whichIndex=module, queryBody=queryOnXXX(topicFieldList[n],docFieldList[i % 6])))
 
 
-    for i in range(len(resDict)):
-        if docId in resDict[i].keys():
-            sList.append(resDict[i][docId])
-        else:
-            if i < 6:
-                tNumber = 0
-            elif i < 12:
-                tNumber = 1
+    for docId in docIdList:
+        sList = []
+        for i in range(len(resDict)):
+            if docId in resDict[i].keys():
+                sList.append(resDict[i][docId])
             else:
-                tNumber = 2
-            s = getScore(whichIndex=module, docId=docId, queryBody=queryOnXXX(topicFieldList[tNumber],docFieldList[i % 6]))
-            sList.append(s)
-            
-    return sList
+                if i < 6:
+                    tNumber = 0
+                elif i < 12:
+                    tNumber = 1
+                else:
+                    tNumber = 2
+                s = getScore(whichIndex=module, docId=docId, queryBody=queryOnXXX(topicFieldList[tNumber],docFieldList[i % 6]))
+                sList.append(s)
+        subDict.update({docId, sList})
+    return subDict
 
 def getScoreDict(topicId, docIdList):
     resDict = {}
-    for docId in docIdList:
-        list1 = getSubScoreDict(bm25Index, topicId, docId)
-        list2 = getSubScoreDict(tfidfIndex, topicId, docId)
-        list1.extend(list2)
-        resDict.update({docId:list1})
+    dict1 = getSubScoreDict(bm25Index, topicId, docIdList)
+    dict2 = getSubScoreDict(tfidfIndex, topicId, docIdList)
+
+    for k in dict1.keys():
+        d1 = copy.copy(dict1[k])
+        d1.extend(dict2[k])
+        resDict = resDict.update({k, d1})
     return resDict
+
 
 
 
