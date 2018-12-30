@@ -15,7 +15,7 @@ __modelFilePrefix = "MP"
 
 __searchModelNum = 2
 __topicFieldNum = 3
-__docFieldNum = 3
+__docFieldNum = 6
 
 __inputTensorXName = "inputx"
 __inputTensorYName = "inputy"
@@ -38,17 +38,17 @@ def __buildModel(modelID):
     
     with graph.as_default():
         # compute dimensions
-        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 18
+        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 36
         topicLayerDim = __searchModelNum * __topicFieldNum # 6
         searchLayerDim = __searchModelNum # 2
 
         # layer 0: input layer
-        inputTensorX = tf.placeholder(shape=(__batchSize, 2, docLayerDim), name=__inputTensorXName+str(modelID), dtype=tf.float64) # n*2*18
+        inputTensorX = tf.placeholder(shape=(__batchSize, 2, docLayerDim), name=__inputTensorXName+str(modelID), dtype=tf.float64) # n*2*36
         inputTensorY = tf.placeholder(shape=(__batchSize, 1), name=__inputTensorYName+str(modelID), dtype=tf.float64) # n*1
         inputTensorS = tf.placeholder(shape=(__batchSize, 2), name=__inputTensorWName+str(modelID), dtype=tf.float64) # n*2
 
         # layer 1: doc-field layer
-        docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName+str(modelID)) # 18
+        docVariableTensor = tf.Variable(np.random.randn(docLayerDim), name=__docVariableTensorName+str(modelID)) # 36
         dotTensor1 = inputTensorX * docVariableTensor # n*2*18
         reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
         reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6

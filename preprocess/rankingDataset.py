@@ -2,7 +2,7 @@
 
 import os
 import math
-from Search.search import getScoreList
+from Search.search import getScoreDict
 from train.word2vec import similarity
 
 curDir = os.path.dirname(__file__)
@@ -245,13 +245,15 @@ def __init():
             print("Build doc similarities({}/{})...".format(curTopicID, __topicsNum))
             curDocSimilarities = __docSimilarities[curFoldID][curIndexID]
 
+            tempDocIDList = []
+            tempDocIDSet = set()
+
             # relevance 1 > relevance 0
             for largerDocID in relevanceList1:
                 for smallerDocID in relevanceList0:
-                    largerScoreList = getScoreList(curTopicID, largerDocID)
-                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    tempData = (largerScoreList, smallerScoreList)
-                    curDataList.append(tempData)
+                    tempDocIDList.append((largerDocID, smallerDocID))
+                    tempDocIDSet.add(largerDocID)
+                    tempDocIDSet.add(smallerDocID)
 
                     largerDocSimilarity = similarity(curTopicID, largerDocID)
                     smallerDocSimilarity = similarity(curTopicID, smallerDocID)
@@ -260,14 +262,20 @@ def __init():
             # relevance 2 > relevance 1
             for largerDocID in relevanceList2:
                 for smallerDocID in relevanceList1:
-                    largerScoreList = getScoreList(curTopicID, largerDocID)
-                    smallerScoreList = getScoreList(curTopicID, smallerDocID)
-                    tempData = (largerScoreList, smallerScoreList)
-                    curDataList.append(tempData)
+                    tempDocIDList.append((largerDocID, smallerDocID))
+                    tempDocIDSet.add(largerDocID)
+                    tempDocIDSet.add(smallerDocID)
 
-                    largerDocSimilarity = similarity(queryStr, largerDocID)
-                    smallerDocSimilarity = similarity(queryStr, smallerDocID)
+                    largerDocSimilarity = similarity(curTopicID, largerDocID)
+                    smallerDocSimilarity = similarity(curTopicID, smallerDocID)
                     curDocSimilarities.append((largerDocSimilarity, smallerDocSimilarity))
+
+            # get score lists
+            tempScoreDict = getScoreDict(curTopicID, list(tempDocIDSet))
+            for tempTuple in tempDocIDList:
+                largerScoreList = tempScoreDict.get(tempTuple[0])
+                smallerScoreList = tempScoreDict.get(tempTuple[1])
+                curDataList.append((largerScoreList, smallerScoreList))
 
             # save data dataset
             print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
