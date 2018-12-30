@@ -4,6 +4,7 @@ import os
 import math
 from Search.search import getScoreDict
 from train.word2vec import similarity
+import time
 
 curDir = os.path.dirname(__file__)
 dataDir = os.path.join(os.path.dirname(curDir), "data")
@@ -276,7 +277,6 @@ def __init():
                 largerScoreList = tempScoreDict.get(tempTuple[0])
                 smallerScoreList = tempScoreDict.get(tempTuple[1])
                 curDataList.append((largerScoreList, smallerScoreList))
-
             # save data dataset
             print("Save ranking dataset({}/{})...".format(curTopicID, __topicsNum))
             __saveDataset(curFoldID, curIndexID)
