@@ -1,12 +1,12 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 curDirPath=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
 # change path of python virtual env
-echo "Activate virtual environment of python..."
-activatePath=${curDirPath}"/clinicalenv/bin/activate"
-echo "Success"
-source ${activatePath}
+#echo "Activate virtual environment of python..."
+#activatePath=${curDirPath}"/clinicalenv/bin/activate"
+#echo "Success"
+#source ${activatePath}
 
 # startup elastic search
 # NOTE: use chmod to add access permission for any files in your elasticsearch install directory
@@ -26,5 +26,23 @@ fi
 #echo "Success"
 
 # evaluate IR
-#echo "Evaluate our IR system..."
+echo "Evaluate our IR system..."
+dataPath=${curDirPath}"/data"
 
+P10List=(0 0 0 0 0)
+for modelID in 0 1 2 3 4
+do
+    testID=$(echo "(${modelID} + 1)%5" | bc)
+    temp=$(./trec_eval ${dataPath}"/qrels${testID}.txt" ${dataPath}"/res${modelID}.txt" | grep -P "P10\\s" | awk '{print $3}')
+    P10List[$modelID]=$(echo "${P10List[$modelID]} + $temp" | bc)
+done
+echo "All values of P10: ${P10List[*]}"
+
+# calculate mean P10
+mean=0
+for modelID in 0 1 2 3 4
+do
+    mean=$(echo "$mean + ${P10List[$modelID]}" | bc)
+done
+mean=$(echo "scale=4;$mean / 5.0" | bc)
+echo "Mean value of P10: $mean"
