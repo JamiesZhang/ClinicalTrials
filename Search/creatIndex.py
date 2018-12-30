@@ -118,27 +118,30 @@ req = requests.get(r'http://localhost:9200')
 if req.status_code != 200:
     raise RuntimeError('connection failure')
 
-# init the index
-initIndex("clinicaltrials_bm25",Body("BM25"))
-initIndex("clinicaltrials_tfidf",Body("default"))
-
-# convert each document to json object
-dir0 = os.listdir(docDir)     #000 001 002...
-for i in range(len(dir0)):
-    path0 = os.path.join(docDir, dir0[i])       # clinicaltrials_xml/000
-    dir1 = os.listdir(path0)                    # 00000,00001,00002...
-    for j in range(len(dir1)):
-        path1 = os.path.join(path0, dir1[j])    # clinicaltrials_xml/000/00000
-        fileName = os.listdir(path1)            # NCT00000102.xml
-        for k in range(len(fileName)):
-            filePath = os.path.join(path1,fileName[k])
-            rawDoc = docs.loadDoc(filePath)
-            jsonDoc = rawDoc.toJsonObj()
-            docId = rawDoc.getDocId()
-            try:
-                addIndex("clinicaltrials_bm25", docId, jsonDoc)         # add document to index
-                addIndex("clinicaltrials_tfidf", docId, jsonDoc)
-            except Exception as e:
-                print(e)
-        print('finish dir {}'.format(dir1[j]))
-print('Creat index successful!')
+if (not es.indices.exists(index="clinicaltrials_bm25")) and (not es.indices.exists(index="clinicaltrials_tfidf")):
+    # init the index
+    initIndex("clinicaltrials_bm25",Body("BM25"))
+    initIndex("clinicaltrials_tfidf",Body("default"))
+    
+    # convert each document to json object
+    dir0 = os.listdir(docDir)     #000 001 002...
+    for i in range(len(dir0)):
+        path0 = os.path.join(docDir, dir0[i])       # clinicaltrials_xml/000
+        dir1 = os.listdir(path0)                    # 00000,00001,00002...
+        for j in range(len(dir1)):
+            path1 = os.path.join(path0, dir1[j])    # clinicaltrials_xml/000/00000
+            fileName = os.listdir(path1)            # NCT00000102.xml
+            for k in range(len(fileName)):
+                filePath = os.path.join(path1,fileName[k])
+                rawDoc = docs.loadDoc(filePath)
+                jsonDoc = rawDoc.toJsonObj()
+                docId = rawDoc.getDocId()
+                try:
+                    addIndex("clinicaltrials_bm25", docId, jsonDoc)         # add document to index
+                    addIndex("clinicaltrials_tfidf", docId, jsonDoc)
+                except Exception as e:
+                    print(e)
+            print('finish dir {}'.format(dir1[j]))
+    print('Creat index successful!')
+else:
+    print("The index is already exists!!!")
