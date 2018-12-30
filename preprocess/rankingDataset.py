@@ -299,16 +299,18 @@ def constructDatasetForModel(modelID):
     trainIDs = [(modelID+2) % __foldNum, (modelID+3) % __foldNum, (modelID+4) % __foldNum] # 3 folds
 
     validationDataset = __rankingData[validationID] # 6 elements
+
     testDataset = __rankingData[testID] # 6 elements
+    similarityTestset = __docSimilarities[testID] # 6 elements
 
     trainDataset = [] # 18 elements
-    similarities = [] # 18 elements
+    similarityTrainset = [] # 18 elements
     for trainID in trainIDs:
         for indexID in range(__topicsNumPerFold):
             trainDataset.append(__rankingData[trainID][indexID])
-            similarities.append(__docSimilarities[trainID][indexID])
+            similarityTrainset.append(__docSimilarities[trainID][indexID])
 
-    return validationDataset, testDataset, trainDataset, similarities
+    return validationDataset, testDataset, similarityTestset, trainDataset, similarityTrainset
 
 def getTopicIDForValidation(modelID, indexID):
     if modelID < 0 or modelID >= __foldNum:
