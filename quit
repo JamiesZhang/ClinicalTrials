@@ -5,8 +5,7 @@ curDirPath=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 # change path of python virtual env
 echo "Deactivate virtual environment of python..."
 deactivate
-echo "Success"
 
 # close elasticsearch
+echo "Close elastic search process..."
 kill -9 $(jps | grep Elasticsearch | awk '{print $1}')
-echo "Success"

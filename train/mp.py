@@ -14,7 +14,7 @@ __subDirPrefix = "MP"
 __modelFilePrefix = "MP"
 
 __searchModelNum = 2
-__topicFieldNum = 3
+__topicFieldNum = 2
 __docFieldNum = 6
 
 __inputTensorXName = "inputx"
@@ -34,8 +34,8 @@ __epochNum = 1
 graph = tf.Graph()
 sess = tf.Session(graph=graph)
 
-#docVariableInitValue = np.random.randn(36)
-#topicVariableInitValue = np.random.randn(6)
+#docVariableInitValue = np.random.randn(24)
+#topicVariableInitValue = np.random.randn(4)
 #searchVariableInitValue = np.random.randn(2)
 #similarityVariableInitValue = np.random.randn(1)
 
@@ -48,26 +48,26 @@ def __buildModel(modelID):
     
     with graph.as_default():
         # compute dimensions
-        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 36
+        docLayerDim = __searchModelNum * __topicFieldNum * __docFieldNum # 24
         topicLayerDim = __searchModelNum * __topicFieldNum # 6
         searchLayerDim = __searchModelNum # 2
 
         # layer 0: input layer
-        inputTensorX = tf.placeholder(shape=(__batchSize, 2, docLayerDim), name=__inputTensorXName+str(modelID), dtype=tf.float64) # n*2*36
+        inputTensorX = tf.placeholder(shape=(__batchSize, 2, docLayerDim), name=__inputTensorXName+str(modelID), dtype=tf.float64) # n*2*24
         inputTensorY = tf.placeholder(shape=(__batchSize, 1), name=__inputTensorYName+str(modelID), dtype=tf.float64) # n*1
         inputTensorS = tf.placeholder(shape=(__batchSize, 2), name=__inputTensorWName+str(modelID), dtype=tf.float64) # n*2
 
         # layer 1: doc-field layer
-        docVariableTensor = tf.Variable(docVariableInitValue, name=__docVariableTensorName+str(modelID)) # 36
-        dotTensor1 = inputTensorX * docVariableTensor # n*2*18
-        reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*6*3
-        reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*6
-        # reluTensor1 = tf.nn.relu(reduceSumTensor1) # n*2*6
+        docVariableTensor = tf.Variable(docVariableInitValue, name=__docVariableTensorName+str(modelID)) # 24
+        dotTensor1 = inputTensorX * docVariableTensor # n*2*24
+        reshapeTensor1 = tf.reshape(dotTensor1, shape=(-1, 2, topicLayerDim, __docFieldNum)) # n*2*4*6
+        reduceSumTensor1 = tf.reduce_sum(reshapeTensor1, 3) # n*2*4
+        # reluTensor1 = tf.nn.relu(reduceSumTensor1) # n*2*4
 
         # layer 2: topic-field layer
-        topicVariableTensor = tf.Variable(topicVariableInitValue, name=__topicVariableTensorName+str(modelID)) # 6
-        dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*6
-        reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*3
+        topicVariableTensor = tf.Variable(topicVariableInitValue, name=__topicVariableTensorName+str(modelID)) # 4
+        dotTensor2 = reduceSumTensor1 * topicVariableTensor # n*2*4
+        reshapeTensor2 = tf.reshape(dotTensor2, shape=(-1, 2, searchLayerDim, __topicFieldNum))  # n*2*2*2
         reduceSumTensor2 = tf.reduce_sum(reshapeTensor2, 3)  # n*2*2
         # reluTensor2 = tf.nn.relu(reduceSumTensor2) # n*2*2
 
@@ -148,7 +148,7 @@ def getWeights(modelID):
     topicVariable = sess.run(topicVariableTensor)
     searchVariable = sess.run(searchVariableTensor)
     word2vecVariable = sess.run(word2vecVariableTensor)
-    #print(docVariable, topicVariable, searchVariable, word2vecVariable)
+    # print(docVariable, topicVariable, searchVariable, word2vecVariable)
     return (docVariable, topicVariable, searchVariable, word2vecVariable)
     #return (np.array([1.]*36), np.array([1.]*6), np.array([1.]*2), np.array([1.]))
 
@@ -220,4 +220,3 @@ else:
 
             # load variable values of existed models
             __models[modelID] = saver.restore(sess, curModelPath)
-
