@@ -1,1 +1,2 @@
 models/doc2vec.model filter=lfs diff=lfs merge=lfs -text
+clinicalenv/lib/python3.5/site-packages/tensorflow/python/_pywrap_tensorflow_internal.so filter=lfs diff=lfs merge=lfs -text
