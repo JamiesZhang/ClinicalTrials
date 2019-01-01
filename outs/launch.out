@@ -1,0 +1,79 @@
+Activate virtual environment of python...
+Try to start up elasticsearch...
+Wait for elasticsearch...
+[2018-12-31T20:26:26,513][INFO ][o.e.e.NodeEnvironment    ] [y4pDlfP] using [1] data paths, mounts [[/ (/dev/sda1)]], net usable_space [688.2gb], net total_space [853gb], types [ext4]
+[2018-12-31T20:26:26,516][INFO ][o.e.e.NodeEnvironment    ] [y4pDlfP] heap size [989.8mb], compressed ordinary object pointers [true]
+[2018-12-31T20:26:26,537][INFO ][o.e.n.Node               ] [y4pDlfP] node name derived from node ID [y4pDlfPQRq6qO3xBxb1bFg]; set [node.name] to override
+[2018-12-31T20:26:26,537][INFO ][o.e.n.Node               ] [y4pDlfP] version[6.5.4], pid[13795], build[default/tar/d2ef93d/2018-12-17T21:17:40.758843Z], OS[Linux/4.10.0-28-generic/amd64], JVM[Oracle Corporation/OpenJDK 64-Bit Server VM/1.8.0_191/25.191-b12]
+[2018-12-31T20:26:26,537][INFO ][o.e.n.Node               ] [y4pDlfP] JVM arguments [-Xms1g, -Xmx1g, -XX:+UseConcMarkSweepGC, -XX:CMSInitiatingOccupancyFraction=75, -XX:+UseCMSInitiatingOccupancyOnly, -XX:+AlwaysPreTouch, -Xss1m, -Djava.awt.headless=true, -Dfile.encoding=UTF-8, -Djna.nosys=true, -XX:-OmitStackTraceInFastThrow, -Dio.netty.noUnsafe=true, -Dio.netty.noKeySetOptimization=true, -Dio.netty.recycler.maxCapacityPerThread=0, -Dlog4j.shutdownHookEnabled=false, -Dlog4j2.disable.jmx=true, -Djava.io.tmpdir=/tmp/elasticsearch.KwTt48fE, -XX:+HeapDumpOnOutOfMemoryError, -XX:HeapDumpPath=data, -XX:ErrorFile=logs/hs_err_pid%p.log, -XX:+PrintGCDetails, -XX:+PrintGCDateStamps, -XX:+PrintTenuringDistribution, -XX:+PrintGCApplicationStoppedTime, -Xloggc:logs/gc.log, -XX:+UseGCLogFileRotation, -XX:NumberOfGCLogFiles=32, -XX:GCLogFileSize=64m, -Des.path.home=/usr/local/elasticsearch-6.5.4, -Des.path.conf=/usr/local/elasticsearch-6.5.4/config, -Des.distribution.flavor=default, -Des.distribution.type=tar]
+[2018-12-31T20:26:28,350][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [aggs-matrix-stats]
+[2018-12-31T20:26:28,350][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [analysis-common]
+[2018-12-31T20:26:28,350][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [ingest-common]
+[2018-12-31T20:26:28,350][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [lang-expression]
+[2018-12-31T20:26:28,350][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [lang-mustache]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [lang-painless]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [mapper-extras]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [parent-join]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [percolator]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [rank-eval]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [reindex]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [repository-url]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [transport-netty4]
+[2018-12-31T20:26:28,351][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [tribe]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-ccr]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-core]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-deprecation]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-graph]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-logstash]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-ml]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-monitoring]
+[2018-12-31T20:26:28,352][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-rollup]
+[2018-12-31T20:26:28,353][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-security]
+[2018-12-31T20:26:28,353][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-sql]
+[2018-12-31T20:26:28,353][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-upgrade]
+[2018-12-31T20:26:28,353][INFO ][o.e.p.PluginsService     ] [y4pDlfP] loaded module [x-pack-watcher]
+[2018-12-31T20:26:28,353][INFO ][o.e.p.PluginsService     ] [y4pDlfP] no plugins loaded
+[2018-12-31T20:26:31,984][INFO ][o.e.x.s.a.s.FileRolesStore] [y4pDlfP] parsed [0] roles from file [/usr/local/elasticsearch-6.5.4/config/roles.yml]
+[2018-12-31T20:26:32,421][INFO ][o.e.x.m.j.p.l.CppLogMessageHandler] [y4pDlfP] [controller/14027] [Main.cc@109] controller (64 bit): Version 6.5.4 (Build b616085ef32393) Copyright (c) 2018 Elasticsearch BV
+[2018-12-31T20:26:32,851][DEBUG][o.e.a.ActionModule       ] [y4pDlfP] Using REST wrapper from plugin org.elasticsearch.xpack.security.Security
+[2018-12-31T20:26:33,058][INFO ][o.e.d.DiscoveryModule    ] [y4pDlfP] using discovery type [zen] and host providers [settings]
+[2018-12-31T20:26:33,814][INFO ][o.e.n.Node               ] [y4pDlfP] initialized
+[2018-12-31T20:26:33,814][INFO ][o.e.n.Node               ] [y4pDlfP] starting ...
+[2018-12-31T20:26:33,992][INFO ][o.e.t.TransportService   ] [y4pDlfP] publish_address {127.0.0.1:9300}, bound_addresses {[::1]:9300}, {127.0.0.1:9300}
+[2018-12-31T20:26:37,096][INFO ][o.e.c.s.MasterService    ] [y4pDlfP] zen-disco-elected-as-master ([0] nodes joined), reason: new_master {y4pDlfP}{y4pDlfPQRq6qO3xBxb1bFg}{TUaBZYkRThCV0TJhhBFW-g}{127.0.0.1}{127.0.0.1:9300}{ml.machine_memory=67135975424, xpack.installed=true, ml.max_open_jobs=20, ml.enabled=true}
+[2018-12-31T20:26:37,120][INFO ][o.e.c.s.ClusterApplierService] [y4pDlfP] new_master {y4pDlfP}{y4pDlfPQRq6qO3xBxb1bFg}{TUaBZYkRThCV0TJhhBFW-g}{127.0.0.1}{127.0.0.1:9300}{ml.machine_memory=67135975424, xpack.installed=true, ml.max_open_jobs=20, ml.enabled=true}, reason: apply cluster state (from master [master {y4pDlfP}{y4pDlfPQRq6qO3xBxb1bFg}{TUaBZYkRThCV0TJhhBFW-g}{127.0.0.1}{127.0.0.1:9300}{ml.machine_memory=67135975424, xpack.installed=true, ml.max_open_jobs=20, ml.enabled=true} committed version [1] source [zen-disco-elected-as-master ([0] nodes joined)]])
+[2018-12-31T20:26:37,143][INFO ][o.e.x.s.t.n.SecurityNetty4HttpServerTransport] [y4pDlfP] publish_address {127.0.0.1:9200}, bound_addresses {[::1]:9200}, {127.0.0.1:9200}
+[2018-12-31T20:26:37,143][INFO ][o.e.n.Node               ] [y4pDlfP] started
+[2018-12-31T20:26:37,907][WARN ][o.e.x.s.a.s.m.NativeRoleMappingStore] [y4pDlfP] Failed to clear cache for realms [[]]
+[2018-12-31T20:26:37,961][INFO ][o.e.l.LicenseService     ] [y4pDlfP] license [b2852394-216d-4124-8737-ab04a790afd4] mode [basic] - valid
+[2018-12-31T20:26:37,973][INFO ][o.e.g.GatewayService     ] [y4pDlfP] recovered [3] indices into cluster_state
+[2018-12-31T20:26:39,889][INFO ][o.e.c.r.a.AllocationService] [y4pDlfP] Cluster health status changed from [RED] to [YELLOW] (reason: [shards started [[clinicaltrials][3], [clinicaltrials][2], [clinicaltrials][1], [clinicaltrials][0]] ...]).
+Elasticsearch start up successfully!
+Call entry.py...
+Load the model of word2vec...
+Success!
+Load existed dataset(0/5)...
+Load existed dataset(1/5)...
+Load existed dataset(2/5)...
+Load existed dataset(3/5)...
+Load existed dataset(4/5)...
+Load existed doc similarities(0/5)...
+Load existed doc similarities(1/5)...
+Load existed doc similarities(2/5)...
+Load existed doc similarities(3/5)...
+Load existed doc similarities(4/5)...
+Success!
+Load the 0th model...
+Load the 1th model...
+Load the 2th model...
+Load the 3th model...
+Load the 4th model...
+Load elastic search index successfully!
+finish module 0
+finish module 1
+finish module 2
+finish module 3
+finish module 4
+Evaluate our IR system...
+All values of P10: .3333 .4000 .4333 .3600 .3667
+Mean value of P10: .3786
